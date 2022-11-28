@@ -1,0 +1,140 @@
+<?xml version="1.0" ?>
+<robot name="tendon_driven_finger" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- ****************** MATHS CONSTANTS *******************************  -->
+  <!-- Define generic, usefule maths constants -->
+  <xacro:property name="pi2" value="1.57079632679"/>
+
+  <!-- ****************** ROBOT CONSTANTS *******************************  -->
+  <!-- Define the size of the robot's main chassis in meters -->
+  <xacro:property name="width" value="0.03"/>
+  <xacro:property name="length" value="0.02"/>
+  <xacro:property name="joint_offset" value="0.04"/>
+
+  <material name="black">
+    <color rgba="0.0 0.0 0.0 1.0"/>
+  </material>
+
+  <material name="trans_grey">
+    <color rgba="${100/255} ${100/255} ${100/255} 0.35"/>
+  </material>
+
+
+  <!-- ****************** ROBOT BASE ************************************  -->
+  <link name="world_connector"/>
+  
+  <link name="base">
+    <visual>
+      <origin xyz="-0.03 -0.045 0.03" rpy="${-pi2} 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://tendon_driven_finger/meshes/SensorizedBase.STL"
+              scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin xyz="0.0 0.0 ${-0.04/2}"/>
+      <geometry>
+        <box size="0.08 0.05 0.05"/>
+      </geometry>
+      <material name="trans_grey"/>
+    </collision>
+  </link>
+  <!-- ****************** ROBOT BOTTOM *********************************  -->
+  <link name="bottom">
+    <visual>
+      <origin xyz="${-(width/2 + 0.0025)} ${3/2 * length} ${-(0.05+joint_offset)}" rpy="${pi2} 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://tendon_driven_finger/meshes/SensorizedBottom.STL"
+              scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin xyz="0.0 0.0 ${-(joint_offset)}"/>
+      <geometry>
+        <box size="${width} ${length} 0.07"/>
+      </geometry>
+      <material name="trans_grey"/>
+    </collision>
+  </link>
+
+  <link name="bottom_intermediate">
+  </link>
+
+  <!-- **************** ROBOT MIDDLE *********************************** -->
+  <link name="middle">
+    <visual>
+      <origin xyz="0.02 0.032 0" rpy="${-pi2} 0.0 ${pi}"/>
+      <geometry>
+        <mesh filename="package://tendon_driven_finger/meshes/SensorizedMiddle.STL"
+              scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin xyz="0.0 0.0 -0.035"/>
+      <geometry>
+        <box size="${width} ${length} 0.07"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- **************** ROBOT TOP *********************************** -->
+  <link name="top">
+    <visual>
+      <origin xyz="-0.02 -0.01 0.005" rpy="${pi} 0.0 ${pi/2}"/>
+      <geometry>
+        <mesh filename="package://tendon_driven_finger/meshes/top.STL"
+              scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin xyz="0.0 0.0 -0.025"/>
+      <geometry>
+        <box size="${width} ${length} 0.057"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- ****************** ROBOT JOINTS ********************************* -->
+  <joint name="world_joint" type="fixed">
+    <parent link="world_connector"/>
+    <child link="base" />
+    <origin xyz="0.0 0.0 ${1.0 - 0.05/2}" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="base_joint_pitch" type="revolute">
+    <parent link="base"/>
+    <child link="bottom_intermediate"/>
+    <axis xyz="1 0 0"/>
+    <limit effort="1000.0" lower="${-pi2}" upper="${pi2}" velocity="${pi2}"/>
+    <origin xyz="0.0 0.0 ${-(joint_offset)}" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="base_joint_roll" type="revolute">
+    <parent link="bottom_intermediate"/>
+    <child link="bottom"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="1000.0" lower="${-pi2}" upper="${pi2}" velocity="${pi2}"/>
+    <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="middle_joint" type="revolute">
+    <parent link="bottom"/>
+    <child link="middle"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="1000.0" lower="${-pi2}" upper="${pi2}" velocity="${pi2}"/>
+    <origin xyz="0.0 0.0 ${-1.75*joint_offset}" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="top_joint" type="revolute">
+    <parent link="middle"/>
+    <child link="top"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="1000.0" lower="${-pi2}" upper="${pi2}" velocity="${pi2}"/>
+    <origin xyz="0.0 0.0 ${-(1.5*joint_offset)}" rpy="0 0 0"/>
+  </joint>
+
+</robot>
