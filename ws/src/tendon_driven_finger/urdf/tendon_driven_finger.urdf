@@ -83,9 +83,9 @@
   <!-- **************** ROBOT TOP *********************************** -->
   <link name="top">
     <visual>
-      <origin xyz="-0.02 -0.01 0.005" rpy="${pi} 0.0 ${pi/2}"/>
+      <origin xyz="0.015 -0.01 0.0075" rpy="${-pi/2} 0 ${pi/2}"/>
       <geometry>
-        <mesh filename="package://tendon_driven_finger/meshes/top.STL"
+        <mesh filename="package://tendon_driven_finger/meshes/round-top.STL"
               scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
