@@ -98,6 +98,9 @@
     </collision>
   </link>
 
+  <!-- **************** ROBOT EE *************************************** -->
+  <link name="ee" type="fixed"/>
+
   <!-- ****************** ROBOT JOINTS ********************************* -->
   <joint name="world_joint" type="fixed">
     <parent link="world_connector"/>
@@ -137,4 +140,9 @@
     <origin xyz="0.0 0.0 ${-(1.5*joint_offset)}" rpy="0 0 0"/>
   </joint>
 
+  <joint name="ee_connector" type="fixed">
+    <parent link="top"/>
+    <child link="ee"/>
+    <origin xyz="0.0 0.0 ${-(1.15*joint_offset)}" rpy="${pi} 0 0"/>
+  </joint>
 </robot>
