@@ -7,9 +7,36 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(rclcpp REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
+
+add_executable(base_tf_broadcaster src/base_tf_broadcaster.cpp)
+ament_target_dependencies(base_tf_broadcaster
+    geometry_msgs
+    rclcpp
+    tf2
+    tf2_ros
+)
+
+add_executable(base_fake_pose_publisher src/base_fake_pose_publisher.cpp)
+ament_target_dependencies(base_fake_pose_publisher
+    geometry_msgs
+    rclcpp
+)
+
+install(TARGETS
+    base_tf_broadcaster
+    DESTINATION lib/${PROJECT_NAME})
+
+
+install(TARGETS
+    base_fake_pose_publisher
+    DESTINATION lib/${PROJECT_NAME})
 
 install(
   DIRECTORY config launch maps meshes models params rviz src urdf worlds

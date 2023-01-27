@@ -20,7 +20,7 @@ def generate_launch_description():
   default_rviz_config_path = os.path.join(pkg_share, 'rviz/rviz_basic_settings.rviz')
  
   # Set the path to the URDF file
-  default_urdf_model_path = os.path.join(pkg_share, 'urdf/tendon_driven_finger.urdf')
+  default_urdf_model_path = os.path.join(pkg_share, 'urdf/am.urdf')
  
   ########### YOU DO NOT NEED TO CHANGE ANYTHING BELOW THIS LINE ##############  
   # Launch configuration variables specific to simulation
@@ -77,6 +77,13 @@ def generate_launch_description():
     output='screen',
     arguments=['-d', rviz_config_file])
    
+  # Start Base TF Broadcaster
+  start_base_tf_broadcaster = Node(package=pkg_name,
+                                   executable="base_tf_broadcaster")
+
+  # Start Fake Base Pose Publisher
+  start_base_fake_pose_publisher = Node(package=pkg_name,
+                                   executable="base_fake_pose_publisher")
   # Create the launch description and populate
   ld = LaunchDescription()
  
@@ -90,5 +97,7 @@ def generate_launch_description():
   # Add any actions
   ld.add_action(start_robot_state_publisher_cmd)
   ld.add_action(start_rviz_cmd)
+  ld.add_action(start_base_fake_pose_publisher)
+  ld.add_action(start_base_tf_broadcaster)
  
   return ld

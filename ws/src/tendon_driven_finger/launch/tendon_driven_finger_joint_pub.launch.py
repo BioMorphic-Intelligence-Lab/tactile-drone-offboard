@@ -12,17 +12,18 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
  
 def generate_launch_description():
+
+  pkg_name = 'tendon_driven_finger'
  
   # Set the path to this package.
-  pkg_share = FindPackageShare(package='tendon_driven_finger').find('tendon_driven_finger')
+  pkg_share = FindPackageShare(package=pkg_name).find(pkg_name)
  
   # Set the path to the RViz configuration settings
   default_rviz_config_path = os.path.join(pkg_share, 'rviz/rviz_basic_settings.rviz')
  
   # Set the path to the URDF file
-  default_urdf_model_path = os.path.join(pkg_share, 'urdf/tendon_driven_finger.urdf')
- 
-  ########### YOU DO NOT NEED TO CHANGE ANYTHING BELOW THIS LINE ##############  
+  default_urdf_model_path = os.path.join(pkg_share, 'urdf/am.urdf')
+   
   # Launch configuration variables specific to simulation
   gui = LaunchConfiguration('gui')
   urdf_model = LaunchConfiguration('urdf_model')
@@ -95,6 +96,14 @@ def generate_launch_description():
     name='rviz2',
     output='screen',
     arguments=['-d', rviz_config_file])
+
+  # Start Base TF Broadcaster
+  start_base_tf_broadcaster = Node(package=pkg_name,
+                                   executable="base_tf_broadcaster")
+
+  # Start Fake Base Pose Publisher
+  start_base_fake_pose_publisher = Node(package=pkg_name,
+                                   executable="base_fake_pose_publisher")
    
   # Create the launch description and populate
   ld = LaunchDescription()
@@ -112,5 +121,7 @@ def generate_launch_description():
   ld.add_action(start_joint_state_publisher_gui_node)
   ld.add_action(start_robot_state_publisher_cmd)
   ld.add_action(start_rviz_cmd)
+  ld.add_action(start_base_fake_pose_publisher)
+  ld.add_action(start_base_tf_broadcaster)
  
   return ld

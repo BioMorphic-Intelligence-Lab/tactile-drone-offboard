@@ -21,7 +21,7 @@
 
 
   <!-- ****************** ROBOT BASE ************************************  -->
-  <link name="world_connector"/>
+  <link name="world"/>
   
   <link name="base">
     <visual>
@@ -103,7 +103,7 @@
 
   <!-- ****************** ROBOT JOINTS ********************************* -->
   <joint name="world_joint" type="fixed">
-    <parent link="world_connector"/>
+    <parent link="world"/>
     <child link="base" />
     <origin xyz="0.0 0.0 ${1.0 - 0.05/2}" rpy="0 0 0"/>
   </joint>
