@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<robot name="tendon_driven_finger" xmlns:xacro="http://ros.org/wiki/xacro">
+<robot name="am_vis" xmlns:xacro="http://ros.org/wiki/xacro">
 
   <!-- ****************** MATHS CONSTANTS *******************************  -->
   <!-- Define generic, usefule maths constants -->
@@ -27,7 +27,7 @@
     <visual>
       <origin xyz="-0.03 -0.045 0.03" rpy="${-pi2} 0.0 0.0"/>
       <geometry>
-        <mesh filename="package://tendon_driven_finger/meshes/SensorizedBase.STL"
+        <mesh filename="package://am_vis/meshes/SensorizedBase.STL"
               scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
@@ -45,7 +45,7 @@
     <visual>
       <origin xyz="${-(width/2 + 0.0025)} ${3/2 * length} ${-(0.05+joint_offset)}" rpy="${pi2} 0.0 0.0"/>
       <geometry>
-        <mesh filename="package://tendon_driven_finger/meshes/SensorizedBottom.STL"
+        <mesh filename="package://am_vis/meshes/SensorizedBottom.STL"
               scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
@@ -67,7 +67,7 @@
     <visual>
       <origin xyz="0.02 0.032 0" rpy="${-pi2} 0.0 ${pi}"/>
       <geometry>
-        <mesh filename="package://tendon_driven_finger/meshes/SensorizedMiddle.STL"
+        <mesh filename="package://am_vis/meshes/SensorizedMiddle.STL"
               scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
@@ -85,7 +85,7 @@
     <visual>
       <origin xyz="0.015 -0.01 0.0075" rpy="${-pi/2} 0 ${pi/2}"/>
       <geometry>
-        <mesh filename="package://tendon_driven_finger/meshes/round-top.STL"
+        <mesh filename="package://am_vis/meshes/round-top.STL"
               scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
