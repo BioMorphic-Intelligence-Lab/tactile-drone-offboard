@@ -10,6 +10,8 @@ find_package(ament_cmake REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(message_filters REQUIRED)
 find_package(rclcpp REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
@@ -28,6 +30,20 @@ ament_target_dependencies(base_fake_pose_publisher
     geometry_msgs
     rclcpp
 )
+
+add_executable(wrench_transformer src/wrench_transformer.cpp)
+ament_target_dependencies(wrench_transformer
+  geometry_msgs
+  message_filters
+  rclcpp
+  tf2
+  tf2_geometry_msgs
+  tf2_ros
+)
+
+install(TARGETS
+    wrench_transformer
+    DESTINATION lib/${PROJECT_NAME})
 
 install(TARGETS
     base_tf_broadcaster

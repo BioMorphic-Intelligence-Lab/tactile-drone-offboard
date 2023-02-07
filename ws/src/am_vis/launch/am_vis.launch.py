@@ -86,6 +86,11 @@ def generate_launch_description():
   # Start Fake Base Pose Publisher
   start_base_fake_pose_publisher = Node(package=pkg_name,
                                    executable="base_fake_pose_publisher")
+
+  # Start Wrench Transformer
+  start_wrench_transformer = Node(package=pkg_name,
+                                  executable="wrench_transformer")
+
   # Create the launch description and populate
   ld = LaunchDescription()
  
@@ -101,5 +106,6 @@ def generate_launch_description():
   ld.add_action(start_rviz_cmd)
   ld.add_action(start_base_fake_pose_publisher)
   ld.add_action(start_base_tf_broadcaster)
+  ld.add_action(start_wrench_transformer)
  
   return ld

@@ -7,7 +7,6 @@ Panels:
         - /Global Options1
         - /Status1
         - /RobotModel1
-        - /RobotModel1/Status1
         - /RobotModel1/Description Topic1
         - /TF1
         - /Wrench1
@@ -134,21 +133,31 @@ Visualization Manager:
           Value: true
         top:
           Value: true
+        world:
+          Value: true
       Marker Scale: 0.20000000298023224
       Name: TF
       Show Arrows: false
       Show Axes: true
       Show Names: false
       Tree:
-        {}
+        world:
+          base:
+            arm_base:
+              bottom_intermediate:
+                bottom:
+                  middle:
+                    top:
+                      ee:
+                        {}
       Update Interval: 0
       Value: true
     - Accept NaN Values: false
-      Alpha: 1
-      Arrow Width: 0.05000000074505806
+      Alpha: 0.800000011920929
+      Arrow Width: 0.25
       Class: rviz_default_plugins/Wrench
       Enabled: true
-      Force Arrow Scale: 0.10000000149011612
+      Force Arrow Scale: 0.05000000074505806
       Force Color: 204; 51; 51
       History Length: 1
       Name: Wrench
@@ -158,8 +167,8 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /force
-      Torque Arrow Scale: 1
+        Value: /force/ee
+      Torque Arrow Scale: 2
       Torque Color: 204; 204; 51
       Value: true
   Enabled: true
@@ -208,16 +217,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 0.8724931478500366
+      Distance: 1.951690673828125
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.2637649476528168
-        Y: -0.22147054970264435
-        Z: 0.34310683608055115
+        X: -0.2939019799232483
+        Y: -0.05493505299091339
+        Z: 0.24805396795272827
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
