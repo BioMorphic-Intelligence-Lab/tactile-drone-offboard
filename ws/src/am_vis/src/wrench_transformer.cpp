@@ -20,7 +20,7 @@ public:
   WrenchTransformer()
   : Node("wrench_transformer")
   {
-    std::string wrench_topic_ = this->declare_parameter<std::string>("wrench_topic", "force");
+    std::string wrench_topic_ = this->declare_parameter<std::string>("wrench_topic", "wrench");
     // Declare and acquire `target_frame` parameter
     target_frame_ = this->declare_parameter<std::string>("target_frame", "ee");
 
