@@ -8,7 +8,10 @@
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-
+  <build_depend>px4_msgs</build_depend>
+  <build_depend>px4_ros_com</build_depend>
+  
+  <exec_depend>px4_ros_com</exec_depend>
   <exec_depend>joint_state_publisher</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>rviz</exec_depend>

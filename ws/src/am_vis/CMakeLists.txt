@@ -1,9 +1,13 @@
 cmake_minimum_required(VERSION 3.8)
 project(am_vis)
 
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
+
+# Needed to find the .so file of px4_ros_com package
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -13,6 +17,9 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(px4_msgs REQUIRED)
+find_package(px4_ros_com REQUIRED)
+
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -28,6 +35,14 @@ ament_target_dependencies(base_tf_broadcaster
 add_executable(base_fake_pose_publisher src/base_fake_pose_publisher.cpp)
 ament_target_dependencies(base_fake_pose_publisher
     geometry_msgs
+    rclcpp
+)
+
+add_executable(px4_topic_transformer src/px4_topic_transformer.cpp)
+ament_target_dependencies(px4_topic_transformer
+    geometry_msgs
+    px4_msgs
+    px4_ros_com
     rclcpp
 )
 
@@ -49,9 +64,12 @@ install(TARGETS
     base_tf_broadcaster
     DESTINATION lib/${PROJECT_NAME})
 
-
 install(TARGETS
     base_fake_pose_publisher
+    DESTINATION lib/${PROJECT_NAME})
+
+install(TARGETS
+    px4_topic_transformer
     DESTINATION lib/${PROJECT_NAME})
 
 install(

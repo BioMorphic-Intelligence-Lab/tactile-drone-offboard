@@ -1,3 +1,9 @@
 [submodule "ws/src/interfaces"]
 	path = ws/src/interfaces
 	url = https://github.com/BioMorphic-Intelligence-Lab/interfaces
+[submodule "ws/src/px4_msgs"]
+	path = ws/src/px4_msgs
+	url = https://github.com/PX4/px4_msgs
+[submodule "ws/src/px4_ros_com"]
+	path = ws/src/px4_ros_com
+	url = https://github.com/PX4/px4_ros_com

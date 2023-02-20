@@ -43,7 +43,7 @@
   <!-- ****************** ROBOT ARM BASE ************************************  -->
   <link name="arm_base">
     <visual>
-      <origin xyz="-0.03 -0.045 0.03" rpy="${-pi2} 0.0 0.0"/>
+      <origin xyz="0.03 -0.045 -0.03" rpy="${pi2} 0.0 ${pi}"/>
       <geometry>
         <mesh filename="package://am_vis/meshes/SensorizedBase.STL"
               scale="0.001 0.001 0.001"/>
@@ -61,7 +61,7 @@
   <!-- ****************** ROBOT BOTTOM *********************************  -->
   <link name="bottom">
     <visual>
-      <origin xyz="${-(width/2 + 0.0025)} ${3/2 * length} ${-(0.05+joint_offset)}" rpy="${pi2} 0.0 0.0"/>
+      <origin xyz="0.03 -0.0165 0.075" rpy="${pi2} ${pi} ${-pi2}"/>
       <geometry>
         <mesh filename="package://am_vis/meshes/SensorizedBottom.STL"
               scale="0.001 0.001 0.001"/>
@@ -83,7 +83,7 @@
   <!-- **************** ROBOT MIDDLE *********************************** -->
   <link name="middle">
     <visual>
-      <origin xyz="0.02 0.032 0" rpy="${-pi2} 0.0 ${pi}"/>
+      <origin xyz="-0.03 -0.02 -0.005" rpy="${pi2} 0.0 ${pi2}"/>
       <geometry>
         <mesh filename="package://am_vis/meshes/SensorizedMiddle.STL"
               scale="0.001 0.001 0.001"/>
@@ -101,7 +101,7 @@
   <!-- **************** ROBOT TOP *********************************** -->
   <link name="top">
     <visual>
-      <origin xyz="0.015 -0.01 0.0075" rpy="${-pi/2} 0 ${pi/2}"/>
+      <origin xyz="-0.011 0.015 -0.01" rpy="${pi2} 0.0 0.0"/>
       <geometry>
         <mesh filename="package://am_vis/meshes/round-top.STL"
               scale="0.001 0.001 0.001"/>
@@ -128,7 +128,7 @@
   <joint name="arm_connector" type="fixed">
     <parent link="base"/>
     <child link="arm_base" />
-    <origin xyz="0.27875 0.0 -0.018" rpy="0 0 0"/>
+    <origin xyz="0.27875 0.0 -0.018" rpy="0 ${pi} 0"/>
   </joint>
 
   <joint name="base_joint_pitch" type="revolute">
@@ -136,36 +136,36 @@
     <child link="bottom_intermediate"/>
     <axis xyz="1 0 0"/>
     <limit effort="1000.0" lower="${-pi2}" upper="${pi2}" velocity="${pi2}"/>
-    <origin xyz="0.0 0.0 ${-(joint_offset)}" rpy="0 0 0"/>
+    <origin xyz="0.0 0.0 0.0315" rpy="0 0 0"/>
   </joint>
 
   <joint name="base_joint_roll" type="revolute">
     <parent link="bottom_intermediate"/>
     <child link="bottom"/>
-    <axis xyz="0 1 0"/>
+    <axis xyz="1 0 0"/>
     <limit effort="1000.0" lower="${-pi2}" upper="${pi2}" velocity="${pi2}"/>
-    <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+    <origin xyz="0.0 0.0 0.0" rpy="0 0 ${pi2}"/>
   </joint>
 
   <joint name="middle_joint" type="revolute">
     <parent link="bottom"/>
     <child link="middle"/>
-    <axis xyz="0 1 0"/>
+    <axis xyz="1 0 0"/>
     <limit effort="1000.0" lower="${-pi2}" upper="${pi2}" velocity="${pi2}"/>
-    <origin xyz="0.0 0.0 ${-1.75*joint_offset}" rpy="0 0 0"/>
+    <origin xyz="0.0 0.0 ${1.5*joint_offset}" rpy="0 0 ${pi}"/>
   </joint>
 
   <joint name="top_joint" type="revolute">
     <parent link="middle"/>
     <child link="top"/>
-    <axis xyz="0 1 0"/>
+    <axis xyz="1 0 0"/>
     <limit effort="1000.0" lower="${-pi2}" upper="${pi2}" velocity="${pi2}"/>
-    <origin xyz="0.0 0.0 ${-(1.5*joint_offset)}" rpy="0 0 0"/>
+    <origin xyz="0.0 0.0 ${(1.3*joint_offset)}" rpy="0 0 ${-pi}"/>
   </joint>
 
   <joint name="ee_connector" type="fixed">
     <parent link="top"/>
     <child link="ee"/>
-    <origin xyz="0.0 0.0 ${-(1.15*joint_offset)}" rpy="${pi} 0 0"/>
+    <origin xyz="0.0 0.0 ${(1.05*joint_offset)}" rpy="0 0 ${-pi2}"/>
   </joint>
 </robot>

@@ -83,13 +83,9 @@ def generate_launch_description():
   start_base_tf_broadcaster = Node(package=pkg_name,
                                    executable="base_tf_broadcaster")
 
-  # Start Fake Base Pose Publisher
-  start_base_fake_pose_publisher = Node(package=pkg_name,
-                                   executable="base_fake_pose_publisher")
-
-  # Start Wrench Transformer
-  start_wrench_transformer = Node(package=pkg_name,
-                                  executable="wrench_transformer")
+  # Start PX4 Translator
+  start_px4_translator = Node(package=pkg_name,
+                              executable="px4_topic_transformer")
 
   # Create the launch description and populate
   ld = LaunchDescription()
@@ -104,8 +100,7 @@ def generate_launch_description():
   # Add any actions
   ld.add_action(start_robot_state_publisher_cmd)
   ld.add_action(start_rviz_cmd)
-  ld.add_action(start_base_fake_pose_publisher)
+  ld.add_action(start_px4_translator)
   ld.add_action(start_base_tf_broadcaster)
-  ld.add_action(start_wrench_transformer)
  
   return ld
