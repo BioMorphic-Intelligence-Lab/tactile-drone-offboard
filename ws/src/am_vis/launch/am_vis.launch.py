@@ -87,6 +87,10 @@ def generate_launch_description():
   start_px4_translator = Node(package=pkg_name,
                               executable="px4_topic_transformer")
 
+  # Start the wrench frame transformer
+  start_wrench_transformer = Node(package=pkg_name,
+                                        executable="wrench_transformer")
+
   # Create the launch description and populate
   ld = LaunchDescription()
  
@@ -101,6 +105,7 @@ def generate_launch_description():
   ld.add_action(start_robot_state_publisher_cmd)
   ld.add_action(start_rviz_cmd)
   ld.add_action(start_px4_translator)
+  ld.add_action(start_wrench_transformer)
   ld.add_action(start_base_tf_broadcaster)
  
   return ld

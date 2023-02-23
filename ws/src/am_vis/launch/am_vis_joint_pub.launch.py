@@ -97,6 +97,10 @@ def generate_launch_description():
     output='screen',
     arguments=['-d', rviz_config_file])
 
+  # Start the wrench frame transformer
+  start_wrench_transformer = Node(package=pkg_name,
+                                        executable="wrench_transformer")
+
   # Start Base TF Broadcaster
   start_base_tf_broadcaster = Node(package=pkg_name,
                                    executable="base_tf_broadcaster")
@@ -123,5 +127,6 @@ def generate_launch_description():
   ld.add_action(start_rviz_cmd)
   ld.add_action(start_base_fake_pose_publisher)
   ld.add_action(start_base_tf_broadcaster)
+  ld.add_action(start_wrench_transformer)
  
   return ld
