@@ -43,15 +43,11 @@ class PX4TopicTransformer : public rclcpp::Node
                                                                                               )
                                                                         );
 
-      position = px4_ros_com::frame_transforms::ned_to_enu_local_frame(   
-                               px4_ros_com::frame_transforms::baselink_to_aircraft_body_frame(
-                                                                                        position
-                                                                                              )
-                                                                        );                                                                  
+      position = px4_ros_com::frame_transforms::ned_to_enu_local_frame(position);                                                                  
                                                                     
       message.pose.position.x = position.x();
       message.pose.position.y = position.y();
-      message.pose.position.z = -position.z();
+      message.pose.position.z = position.z();
 
       message.pose.orientation.x = orientation.x();
       message.pose.orientation.y = orientation.y();
