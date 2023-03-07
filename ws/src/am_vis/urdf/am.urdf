@@ -26,9 +26,10 @@
   <!-- ****************** ROBOT FLYING BASE ************************************  -->
   <link name="base">
     <visual>
-      <origin xyz="0 -0.57 -0.23"/>
+      <!--<origin xyz="0 -0.57 -0.23"/>-->
+      <origin xyz="-0.18 -0.75 -0.41" rpy="${pi2} 0 ${0.75 * pi}"/>
       <geometry>
-        <mesh filename="package://am_vis/meshes/Holybro-X500-V2.STL"
+        <mesh filename="package://am_vis/meshes/HolybroX500V2-withOBC.STL"
               scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
