@@ -31,6 +31,8 @@ register_types(add_types)
 path = '/home/anton/Desktop/rosbags/rosbag2_2023_03_16-17_19_22_FirstSuccessfullPositionReference'
 topics=['/fmu/in/trajectory_setpoint', '/fmu/out/vehicle_odometry', '/fmu/in/vehicle_visual_odometry']
 
+time = (10, 100)
+
 
 # create reader instance and open for reading
 with Reader(path) as reader:
@@ -71,7 +73,6 @@ with Reader(path) as reader:
             mocap += [msg.position]
             mocap_q += [msg.q]
 
-
 # Make all the arrays np arrays
 t_ref = np.array(t_ref, dtype=float)
 reference = np.array(reference, dtype=float)
@@ -85,24 +86,31 @@ t_mocap = np.array(t_mocap, dtype=float)
 mocap = np.array(mocap, dtype=float)
 mocap_q = np.array(mocap_q, dtype=float)
 
+
 # Find start time and shift time scale and turn it into seconds
 start_t = min(np.concatenate((t_ref, t_odom, t_mocap)))
 t_ref = (t_ref - start_t) * 1e-9
 t_odom = (t_odom - start_t) * 1e-9
 t_mocap = (t_mocap - start_t) * 1e-9
 
-fig1, axs1 = plt.subplots(3)
-axs1[0].plot(t_ref, reference[:,2], '--')
-axs1[0].plot(t_odom, odom[:,2], '-')
-axs1[0].plot(t_mocap, mocap[:,2], '-')
+# Find the indeces for the specified time range
+ref_idx = ((np.abs(time[0] - t_ref)).argmin(), (np.abs(time[1] - t_ref)).argmin())
+odom_idx = ((np.abs(time[0] - t_odom)).argmin(), (np.abs(time[1] - t_odom)).argmin())
+mocap_idx = ((np.abs(time[0] - t_mocap)).argmin(), (np.abs(time[1] - t_mocap)).argmin())
+
+
+fig1, axs1 = plt.subplots(2)
+axs1[0].plot(t_ref[ref_idx[0]:ref_idx[1]], reference[ref_idx[0]:ref_idx[1],2], '--')
+axs1[0].plot(t_odom[odom_idx[0]:odom_idx[1]], odom[odom_idx[0]:odom_idx[1],2], '-')
+#axs1[0].plot(t_mocap[mocap_idx[0]:mocap_idx[1]], mocap[mocap_idx[0]:mocap_idx[1],2], '-')
 axs1[0].legend([r"$z_{ref}$", r"$z_{odom}$",r"$z_{mocap}$"])
 axs1[0].grid()
 axs1[0].set_xlabel("Time [s]")
 axs1[0].set_ylabel("Height [m]")
 
-axs1[1].plot(t_ref, reference[:,:2], '--')
-axs1[1].plot(t_odom, odom[:,:2], '-')
-axs1[1].plot(t_mocap, mocap[:,:2], '-')
+axs1[1].plot(t_ref[ref_idx[0]:ref_idx[1]], reference[ref_idx[0]:ref_idx[1],:2], '--')
+axs1[1].plot(t_odom[odom_idx[0]:odom_idx[1]], odom[odom_idx[0]:odom_idx[1],:2], '-')
+#axs1[1].plot(t_mocap[mocap_idx[0]:mocap_idx[1]], mocap[mocap_idx[0]:mocap_idx[1],:2], '-')
 axs1[1].legend([r"$x_{ref}$", r"$y_{ref}$",
                 r"$x_{odom}$",r"$y_{odom}$",
                 r"$x_{mocap}$",r"$y_{mocap}$"])
@@ -110,17 +118,18 @@ axs1[1].grid()
 axs1[1].set_xlabel("Time [s]")
 axs1[1].set_ylabel("Position [m]")
 
-axs1[2].plot(t_odom, odom_q)
-axs1[2].plot(t_mocap, mocap_q)
-axs1[2].legend([r"$w_{odom}$",r"$x_{odom}$",r"$y_{odom}$",r"$z_{odom}$",
-               r"$w_{mocap}$",r"$x_{mocap}$",r"$y_{mocap}$",r"$z_{mocap}$"])
-axs1[2].grid()
-axs1[2].set_xlabel("Time [s]")
-axs1[2].set_ylabel("Quaternion Value")
+#axs1[2].plot(t_odom, odom_q)
+#axs1[2].plot(t_mocap, mocap_q)
+#axs1[2].legend([r"$w_{odom}$",r"$x_{odom}$",r"$y_{odom}$",r"$z_{odom}$",
+#               r"$w_{mocap}$",r"$x_{mocap}$",r"$y_{mocap}$",r"$z_{mocap}$"])
+#axs1[2].grid()
+#axs1[2].set_xlabel("Time [s]")
+#axs1[2].set_ylabel("Quaternion Value")
 
 fig2, axs2 = plt.subplots()
-axs2.plot(odom[:,0], odom[:,1])
-axs2.plot(mocap[:,0], mocap[:,1])
+fig2.gca().set_aspect('equal')
+axs2.plot(odom[odom_idx[0]:odom_idx[1],0], odom[odom_idx[0]:odom_idx[1],1])
+#axs2.plot(mocap[mocap_idx[0]:mocap_idx[1],0], mocap[mocap_idx[0]:mocap_idx[1],1])
 axs2.grid()
 axs2.set_xlabel("x [m]")
 axs2.set_ylabel("y [m]")
