@@ -28,10 +28,10 @@ for pathstr in [
 register_types(add_types)
 
 
-path = '/home/anton/Desktop/rosbags/rosbag2_2023_03_16-17_19_22_FirstSuccessfullPositionReference'
+path = '/home/anton/Desktop/rosbags/rosbag2_2023_03_21-14_15_44_succ_ee_ctrl' #'/home/anton/Desktop/rosbags/rosbag2_2023_03_16-17_19_22_FirstSuccessfullPositionReference'
 topics=['/fmu/in/trajectory_setpoint', '/fmu/out/vehicle_odometry', '/fmu/in/vehicle_visual_odometry']
 
-time = (10, 100)
+time = (0, 100)
 
 
 # create reader instance and open for reading
@@ -40,6 +40,7 @@ with Reader(path) as reader:
     # Init the arrays for plotting
     t_ref = []
     reference = []
+    reference_yaw = []
 
     t_odom = []
     odom = []
@@ -60,6 +61,7 @@ with Reader(path) as reader:
             msg = deserialize_cdr(rawdata, connection.msgtype)
             t_ref += [timestamp]
             reference += [msg.position] 
+            reference_yaw += [msg.yaw]
             
         if connection.topic == topics[1]:
             msg = deserialize_cdr(rawdata, connection.msgtype)
@@ -76,6 +78,7 @@ with Reader(path) as reader:
 # Make all the arrays np arrays
 t_ref = np.array(t_ref, dtype=float)
 reference = np.array(reference, dtype=float)
+reference_yaw = np.array(reference_yaw, dtype=float)
 
 t_odom = np.array(t_odom, dtype=float)
 odom = np.array(odom, dtype=float)
@@ -99,7 +102,7 @@ odom_idx = ((np.abs(time[0] - t_odom)).argmin(), (np.abs(time[1] - t_odom)).argm
 mocap_idx = ((np.abs(time[0] - t_mocap)).argmin(), (np.abs(time[1] - t_mocap)).argmin())
 
 
-fig1, axs1 = plt.subplots(2)
+fig1, axs1 = plt.subplots(3)
 axs1[0].plot(t_ref[ref_idx[0]:ref_idx[1]], reference[ref_idx[0]:ref_idx[1],2], '--')
 axs1[0].plot(t_odom[odom_idx[0]:odom_idx[1]], odom[odom_idx[0]:odom_idx[1],2], '-')
 #axs1[0].plot(t_mocap[mocap_idx[0]:mocap_idx[1]], mocap[mocap_idx[0]:mocap_idx[1],2], '-')
@@ -117,6 +120,23 @@ axs1[1].legend([r"$x_{ref}$", r"$y_{ref}$",
 axs1[1].grid()
 axs1[1].set_xlabel("Time [s]")
 axs1[1].set_ylabel("Position [m]")
+
+axs1[2].plot(t_ref[ref_idx[0]:ref_idx[1]], 180.0 / np.pi  * reference_yaw[ref_idx[0]:ref_idx[1]], '--')
+q0 = odom_q[:,0]
+q1 = odom_q[:,1]
+q2 = odom_q[:,2]
+q3 = odom_q[:,3] 
+yaw = np.arctan2(
+        2 * ((q1 * q2) + (q0 * q3)),
+        q0**2 + q1**2 - q2**2 - q3**2
+    )
+
+axs1[2].plot(t_odom[odom_idx[0]:odom_idx[1]], 180.0 / np.pi  * yaw[odom_idx[0]:odom_idx[1]], '-')
+
+axs1[2].legend([r"$\psi_{ref}$", r"$\psi$"])
+axs1[2].grid()
+axs1[2].set_xlabel("Time [s]")
+axs1[2].set_ylabel("Yaw [degree]")
 
 #axs1[2].plot(t_odom, odom_q)
 #axs1[2].plot(t_mocap, mocap_q)
