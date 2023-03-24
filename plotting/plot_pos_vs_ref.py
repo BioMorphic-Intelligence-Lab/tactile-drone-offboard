@@ -6,6 +6,8 @@ from rosbags.typesys import get_types_from_msg, register_types
 from rosbags.rosbag2 import Reader
 from rosbags.serde import deserialize_cdr
 
+dpi = 250
+size = (20, 10)
 
 def guess_msgtype(path: Path) -> str:
     """Guess message type name from path."""
@@ -28,11 +30,10 @@ for pathstr in [
 register_types(add_types)
 
 
-path = '/home/anton/Desktop/rosbags/rosbag2_2023_03_21-14_15_44_succ_ee_ctrl' #'/home/anton/Desktop/rosbags/rosbag2_2023_03_16-17_19_22_FirstSuccessfullPositionReference'
-topics=['/fmu/in/trajectory_setpoint', '/fmu/out/vehicle_odometry', '/fmu/in/vehicle_visual_odometry']
+path = '/home/anton/Desktop/rosbags/rosbag2_2023_03_21-17_46_19_succ_wall_kiss' #'/home/anton/Desktop/rosbags/rosbag2_2023_03_16-17_19_22_FirstSuccessfullPositionReference'
+topics=['/fmu/in/trajectory_setpoint', '/fmu/out/vehicle_odometry', '/fmu/in/vehicle_visual_odometry', '/wrench']
 
-time = (0, 100)
-
+time = (0, 290)
 
 # create reader instance and open for reading
 with Reader(path) as reader:
@@ -46,10 +47,12 @@ with Reader(path) as reader:
     odom = []
     odom_q = []
 
-
     t_mocap = []
     mocap = []
     mocap_q = []
+
+    t_wrench = []
+    wrench = []
 
     # topic and msgtype information is available on .connections list
     for connection in reader.connections:
@@ -75,6 +78,12 @@ with Reader(path) as reader:
             mocap += [msg.position]
             mocap_q += [msg.q]
 
+        if connection.topic == topics[3]:
+            msg = deserialize_cdr(rawdata, connection.msgtype)
+            t_wrench += [timestamp]
+            wrench += [[msg.wrench.force.x,msg.wrench.force.y,msg.wrench.force.z]]
+
+
 # Make all the arrays np arrays
 t_ref = np.array(t_ref, dtype=float)
 reference = np.array(reference, dtype=float)
@@ -89,17 +98,27 @@ t_mocap = np.array(t_mocap, dtype=float)
 mocap = np.array(mocap, dtype=float)
 mocap_q = np.array(mocap_q, dtype=float)
 
+t_wrench = np.array(t_wrench, dtype=float)
+wrench = np.array(wrench, dtype=float)
+
+# Transform from ned to enu
+T = np.array([[0,1,0],[1,0,0],[0,0,-1]])
+reference = np.array([T @ reference[i,:].transpose() for i in range(len(reference))])
+odom = np.array([T @ odom[i,:].transpose() for i in range(len(odom))])
+mocap = np.array([T @ mocap[i,:].transpose() for i in range(len(mocap))])
 
 # Find start time and shift time scale and turn it into seconds
 start_t = min(np.concatenate((t_ref, t_odom, t_mocap)))
 t_ref = (t_ref - start_t) * 1e-9
 t_odom = (t_odom - start_t) * 1e-9
 t_mocap = (t_mocap - start_t) * 1e-9
+t_wrench = (t_wrench - start_t) * 1e-9
 
 # Find the indeces for the specified time range
 ref_idx = ((np.abs(time[0] - t_ref)).argmin(), (np.abs(time[1] - t_ref)).argmin())
 odom_idx = ((np.abs(time[0] - t_odom)).argmin(), (np.abs(time[1] - t_odom)).argmin())
 mocap_idx = ((np.abs(time[0] - t_mocap)).argmin(), (np.abs(time[1] - t_mocap)).argmin())
+wrench_idx = ((np.abs(time[0] - t_wrench)).argmin(), (np.abs(time[1] - t_wrench)).argmin())
 
 
 fig1, axs1 = plt.subplots(3)
@@ -110,6 +129,7 @@ axs1[0].legend([r"$z_{ref}$", r"$z_{odom}$",r"$z_{mocap}$"])
 axs1[0].grid()
 axs1[0].set_xlabel("Time [s]")
 axs1[0].set_ylabel("Height [m]")
+axs1[0].set_xlim(time)
 
 axs1[1].plot(t_ref[ref_idx[0]:ref_idx[1]], reference[ref_idx[0]:ref_idx[1],:2], '--')
 axs1[1].plot(t_odom[odom_idx[0]:odom_idx[1]], odom[odom_idx[0]:odom_idx[1],:2], '-')
@@ -120,8 +140,9 @@ axs1[1].legend([r"$x_{ref}$", r"$y_{ref}$",
 axs1[1].grid()
 axs1[1].set_xlabel("Time [s]")
 axs1[1].set_ylabel("Position [m]")
+axs1[1].set_xlim(time)
 
-axs1[2].plot(t_ref[ref_idx[0]:ref_idx[1]], 180.0 / np.pi  * reference_yaw[ref_idx[0]:ref_idx[1]], '--')
+#axs1[2].plot(t_ref[ref_idx[0]:ref_idx[1]], 180.0 / np.pi  * reference_yaw[ref_idx[0]:ref_idx[1]], '--')
 q0 = odom_q[:,0]
 q1 = odom_q[:,1]
 q2 = odom_q[:,2]
@@ -131,12 +152,13 @@ yaw = np.arctan2(
         q0**2 + q1**2 - q2**2 - q3**2
     )
 
+axs1[2].plot(t_ref[ref_idx[0]:ref_idx[1]], 180.0 / np.pi * reference_yaw[ref_idx[0]:ref_idx[1]], '--')
 axs1[2].plot(t_odom[odom_idx[0]:odom_idx[1]], 180.0 / np.pi  * yaw[odom_idx[0]:odom_idx[1]], '-')
-
 axs1[2].legend([r"$\psi_{ref}$", r"$\psi$"])
 axs1[2].grid()
 axs1[2].set_xlabel("Time [s]")
 axs1[2].set_ylabel("Yaw [degree]")
+axs1[2].set_xlim(time)
 
 #axs1[2].plot(t_odom, odom_q)
 #axs1[2].plot(t_mocap, mocap_q)
@@ -153,7 +175,22 @@ axs2.plot(odom[odom_idx[0]:odom_idx[1],0], odom[odom_idx[0]:odom_idx[1],1])
 axs2.grid()
 axs2.set_xlabel("x [m]")
 axs2.set_ylabel("y [m]")
+axs2.set_xlim([-0.5, 0.74])
+axs2.set_ylim([-0.5, 1.75])
 axs2.legend([r"$GT_{odom}$",r"$GT_{mocap}$"])
 
 
-plt.show()
+fig3, axs3 = plt.subplots()
+axs3.plot(t_wrench[wrench_idx[0]:wrench_idx[1]], wrench[wrench_idx[0]:wrench_idx[1],:])
+axs3.grid()
+axs3.set_xlabel("Time [s]")
+axs3.set_ylabel("Force")
+axs3.legend([r"$f_x$",r"$f_y$",r"$f_z$"])
+axs3.set_xlim(time)
+
+fig1.set_size_inches(size)
+fig2.set_size_inches(size)
+fig3.set_size_inches(size)
+fig1.savefig("base_pose.png", dpi=dpi, bbox_inches='tight')
+fig2.savefig("groundtrack.png", dpi=dpi, bbox_inches='tight')
+fig3.savefig("force.png", dpi=dpi, bbox_inches='tight')
