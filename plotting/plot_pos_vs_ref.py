@@ -33,7 +33,9 @@ for pathstr in [
 register_types(add_types)
 
 
-path = '/home/anton/Desktop/rosbags/rosbag2_2023_03_23-13_57_45_reference_pushed_into_wall'
+wall_pos = 1.275
+
+path = '/home/anton/Desktop/rosbags/2023_03_27/angled_wall/rosbag2-14_58_40-seemed_alright'
 topics=['/fmu/in/trajectory_setpoint',
         '/fmu/out/vehicle_odometry',
         '/fmu/in/vehicle_visual_odometry',
@@ -41,7 +43,7 @@ topics=['/fmu/in/trajectory_setpoint',
         '/joint_states',
         '/ee_reference']
 
-time = (12, 45)
+time = (10, 120)
 
 # create reader instance and open for reading
 with Reader(path) as reader:
@@ -214,12 +216,18 @@ fig2, axs2 = plt.subplots()
 fig2.gca().set_aspect('equal')
 axs2.plot(odom[odom_idx[0]:odom_idx[1],0], odom[odom_idx[0]:odom_idx[1],1])
 axs2.plot(ee[joint_state_idx[0]:joint_state_idx[1],0], ee[joint_state_idx[0]:joint_state_idx[1],1])
-axs2.add_patch(Rectangle((-0.5,1.25), 2, 2, color='gray', alpha=0.4))
+axs2.add_patch(Rectangle((-2.5,wall_pos), 5, 2, color='gray', alpha=0.4))
 axs2.grid()
 axs2.set_xlabel("x [m]")
 axs2.set_ylabel("y [m]")
-axs2.set_xlim([-0.5, 0.5])
-axs2.set_ylim([-0.5, 1.5])
+axs2.set_xlim([min(np.concatenate((odom[odom_idx[0]:odom_idx[1],0],
+                                   ee[joint_state_idx[0]:joint_state_idx[1],0]))) - 0.1,
+               max(np.concatenate((odom[odom_idx[0]:odom_idx[1],0],
+                                   ee[joint_state_idx[0]:joint_state_idx[1],0]))) + 0.1])
+axs2.set_ylim([min(np.concatenate((odom[odom_idx[0]:odom_idx[1],1],
+                                   ee[joint_state_idx[0]:joint_state_idx[1],1]))) - 0.1,
+               max(np.concatenate((odom[odom_idx[0]:odom_idx[1],1],
+                                   ee[joint_state_idx[0]:joint_state_idx[1],1]))) + 0.1])
 axs2.legend([r"$GT_{base}$",r"$GT_{EE}$"])
 
 
@@ -272,6 +280,7 @@ axs4[2].set_xlabel("Time [s]")
 axs4[2].set_ylabel("Yaw [degree]")
 axs4[2].set_xlim(time)
 
+plt.show()
 
 # Save the Figures
 fig1.set_size_inches(size)
