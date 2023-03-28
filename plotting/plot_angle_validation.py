@@ -18,10 +18,10 @@ def guess_msgtype(path: Path) -> str:
 
 
 
-path = '/home/anton/Desktop/rosbags/rosbag2_2023_03_22-14_40_20_angle_validation'
+path = '/home/anton/Desktop/rosbags/2023_03_28/angled_wall/rosbag2-09_27_18-angle_validation'
 topics=['/wrench', '/mocap_pose', '/wall_pose']
 
-time = (15, 51)
+time = (55, 130)
 
 # create reader instance and open for reading
 with Reader(path) as reader:
@@ -87,6 +87,13 @@ wrench_idx = ((np.abs(time[0] - t_wrench)).argmin(), (np.abs(time[1] - t_wrench)
 mocap_idx = ((np.abs(time[0] - t_mocap)).argmin(), (np.abs(time[1] - t_mocap)).argmin())
 wall_idx = ((np.abs(time[0] - t_wall)).argmin(), (np.abs(time[1] - t_wall)).argmin())
 
+# Transform wrench into base coordinates
+T = np.array([[-1, 0, 0], 
+              [0, 1, 0],
+              [0, 0, -1]])
+wrench = np.array([T @ f for f in wrench])
+wrench[:,1] = -wrench[:,1]
+
 
 fig1, axs1 = plt.subplots()
 base_q0 = mocap_q[:,0]
@@ -107,31 +114,31 @@ wall_yaw = np.arctan2(
         wall_q0**2 + wall_q1**2 - wall_q2**2 - wall_q3**2
     )
 
-estm_yaw =  (wrench[:,1] > 0 * (-1)) * np.arccos(wrench[:,0] / np.sqrt(wrench[:,0]**2 + wrench[:,1]**2))
+estm_yaw =  ((wrench[:,1] > 0) * (1) + (wrench[:,1] < 0) * (-1)) * np.arccos(-wrench[:,0] / np.sqrt(wrench[:,0]**2 + wrench[:,1]**2))
 
-contact_phases = ((np.abs(wrench[:,0]) > 0.15) | (np.abs(wrench[:,1]) > 0.15)) * 1
+contact_phases = ((np.abs(wrench[:,0]) > 0.1) & (np.abs(wrench[:,1]) > 0.08) & (wrench[:, 0] < 0) & (np.sqrt(wrench[:, 0]**2 + wrench[:,1]**2) > 0.1)) * 1
 time_temp = np.linspace(t_wrench[0], t_wrench[-1], len(contact_phases));
 
-axs1.plot(t_mocap[mocap_idx[0]:mocap_idx[1]], 180.0 / np.pi * (base_yaw[mocap_idx[0]:mocap_idx[1]] -wall_yaw[wall_idx[0]:wall_idx[1]]))
-axs1.plot(t_wrench[wrench_idx[0]:wrench_idx[1]], 180.0 / np.pi * estm_yaw[wrench_idx[0]:wrench_idx[1]] * contact_phases[wrench_idx[0]:wrench_idx[1]])
-axs1.fill_between(time_temp[wrench_idx[0]:wrench_idx[1]], 100 * contact_phases[wrench_idx[0]:wrench_idx[1]], -100 * contact_phases[wrench_idx[0]:wrench_idx[1]], alpha=0.4)
+axs1.plot(t_mocap[mocap_idx[0]:mocap_idx[1]], 180.0 / np.pi * (base_yaw[mocap_idx[0]:mocap_idx[1]] -wall_yaw[wall_idx[0]:wall_idx[1]]) - 180.0)
+axs1.plot(t_wrench[wrench_idx[0]:wrench_idx[1]], 180.0 / np.pi * estm_yaw[wrench_idx[0]:wrench_idx[1]])
+axs1.fill_between(time_temp[wrench_idx[0]:wrench_idx[1]], 40 * contact_phases[wrench_idx[0]:wrench_idx[1]], -40 * contact_phases[wrench_idx[0]:wrench_idx[1]], alpha=0.4)
 axs1.grid()
 axs1.legend(["Motion Capture Relative Angle", "Estimated Angle"])
 axs1.set_xlabel("Time [s]")
 axs1.set_ylabel("Angle [Degree]")
 axs1.set_xlim(time)
-axs1.set_ylim([-30,110])
+axs1.set_ylim([-40, 40])
 fig1.set_size_inches(size)
 
 fig3, axs3 = plt.subplots()
 axs3.plot(t_wrench[wrench_idx[0]:wrench_idx[1]], wrench[wrench_idx[0]:wrench_idx[1],:])
-axs3.fill_between(time_temp[wrench_idx[0]:wrench_idx[1]], 0.4 * contact_phases[wrench_idx[0]:wrench_idx[1]], - 0.2 * contact_phases[wrench_idx[0]:wrench_idx[1]], alpha=0.4)
+axs3.fill_between(time_temp[wrench_idx[0]:wrench_idx[1]], 1 * contact_phases[wrench_idx[0]:wrench_idx[1]], - 1 * contact_phases[wrench_idx[0]:wrench_idx[1]], alpha=0.4)
 axs3.grid()
 axs3.set_xlabel("Time [s]")
 axs3.set_ylabel("Force")
 axs3.legend([r"$f_x$",r"$f_y$",r"$f_z$"])
 axs3.set_xlim(time)
-axs3.set_ylim([-0.2,0.4])
+axs3.set_ylim([-1,1])
 
 
 plt.show()

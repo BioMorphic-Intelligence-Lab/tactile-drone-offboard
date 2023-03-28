@@ -35,15 +35,16 @@ register_types(add_types)
 
 wall_pos = 1.275
 
-path = '/home/anton/Desktop/rosbags/2023_03_27/angled_wall/rosbag2-14_58_40-seemed_alright'
+path = '/home/anton/Desktop/rosbags/2023_03_28/angled_away_wall/rosbag2-18_55_51-successfull'
 topics=['/fmu/in/trajectory_setpoint',
         '/fmu/out/vehicle_odometry',
         '/fmu/in/vehicle_visual_odometry',
         '/wrench',
         '/joint_states',
-        '/ee_reference']
+        '/ee_reference',
+        '/wall_pose']
 
-time = (10, 120)
+time = (20, 70)
 
 # create reader instance and open for reading
 with Reader(path) as reader:
@@ -70,6 +71,10 @@ with Reader(path) as reader:
     t_ee_reference = []
     ee_reference = []
     ee_reference_q = []
+
+    t_wall = []
+    wall = []
+    wall_q = []
 
     # topic and msgtype information is available on .connections list
     for connection in reader.connections:
@@ -115,6 +120,17 @@ with Reader(path) as reader:
                                 msg.pose.orientation.x,
                                 msg.pose.orientation.y,
                                 msg.pose.orientation.z]]
+            
+        if connection.topic == topics[6]:
+            msg = deserialize_cdr(rawdata, connection.msgtype)
+            t_wall += [timestamp]
+            wall += [[msg.pose.position.x,
+                      msg.pose.position.y,
+                      msg.pose.position.z]]
+            wall_q += [[msg.pose.orientation.w,
+                        msg.pose.orientation.x,
+                        msg.pose.orientation.y,
+                        msg.pose.orientation.z]]
 
 
 # Make all the arrays np arrays
@@ -140,11 +156,16 @@ t_ee_reference = np.array(t_ee_reference, dtype=float)
 ee_reference = np.array(ee_reference, dtype=float)
 ee_reference_q = np.array(ee_reference_q, dtype=float)
 
+t_wall = np.array(t_wall, dtype=float)
+wall = np.array(wall, dtype=float)
+wall_q = np.array(wall_q, dtype=float)
+
 # Transform from ned to enu
 T = np.array([[0,1,0],[1,0,0],[0,0,-1]])
 reference = np.array([T @ reference[i,:].transpose() for i in range(len(reference))])
 odom = np.array([T @ odom[i,:].transpose() for i in range(len(odom))])
 mocap = np.array([T @ mocap[i,:].transpose() for i in range(len(mocap))])
+wall = np.array([T @ wall[i,:].transpose() for i in range(len(wall))])
 
 # Find the odometry points that most closely match the joint_state messages
 odom_subsample = np.array([odom[(np.abs(t_i - t_odom)).argmin(), :] for t_i in t_joint_state])
@@ -153,13 +174,14 @@ odom_q_subsample = np.array([odom_q[(np.abs(t_i - t_odom)).argmin(), :] for t_i 
 ee = np.array([fk(odom_subsample[i,:], odom_q_subsample[i,:], joint_state[i,:]) for i in range(len(t_joint_state))])
 
 # Find start time and shift time scale and turn it into seconds
-start_t = min(np.concatenate((t_ref, t_odom, t_mocap)))
+start_t = min(np.concatenate((t_ref, t_odom, t_mocap, t_joint_state, t_ee_reference, t_wall)))
 t_ref = (t_ref - start_t) * 1e-9
 t_odom = (t_odom - start_t) * 1e-9
 t_mocap = (t_mocap - start_t) * 1e-9
 t_wrench = (t_wrench - start_t) * 1e-9
 t_joint_state = (t_joint_state - start_t) * 1e-9
 t_ee_reference = (t_ee_reference - start_t) * 1e-9
+t_wall = (t_wall - start_t) * 1e-9
 
 # Find the indeces for the specified time range
 ref_idx = ((np.abs(time[0] - t_ref)).argmin(), (np.abs(time[1] - t_ref)).argmin())
@@ -168,6 +190,7 @@ mocap_idx = ((np.abs(time[0] - t_mocap)).argmin(), (np.abs(time[1] - t_mocap)).a
 wrench_idx = ((np.abs(time[0] - t_wrench)).argmin(), (np.abs(time[1] - t_wrench)).argmin())
 joint_state_idx = ((np.abs(time[0] - t_joint_state)).argmin(), (np.abs(time[1] - t_joint_state)).argmin())
 ee_ref_idx = ((np.abs(time[0] - t_ee_reference)).argmin(), (np.abs(time[1] - t_ee_reference)).argmin())
+wall_idx = ((np.abs(time[0] - t_wall)).argmin(), (np.abs(time[1] - t_wall)).argmin())
 
 
 ####################################################
@@ -201,9 +224,19 @@ yaw = np.arctan2(
         q0**2 + q1**2 - q2**2 - q3**2
     )
 
+q0_wall = wall_q[:,0]
+q1_wall = wall_q[:,1]
+q2_wall = wall_q[:,2]
+q3_wall = wall_q[:,3] 
+wall_yaw = np.arctan2(
+        2 * ((q1_wall * q2_wall) + (q0_wall * q3_wall)),
+        q0_wall**2 + q1_wall**2 - q2_wall**2 - q3_wall**2
+    )
+
 axs1[2].plot(t_ref[ref_idx[0]:ref_idx[1]], 180.0 / np.pi * reference_yaw[ref_idx[0]:ref_idx[1]], '--')
+#axs1[2].plot(t_wall[wall_idx[0]:wall_idx[1]], 180.0 / np.pi * wall_yaw[wall_idx[0]:wall_idx[1]], '--')
 axs1[2].plot(t_odom[odom_idx[0]:odom_idx[1]], 180.0 / np.pi  * yaw[odom_idx[0]:odom_idx[1]], '-')
-axs1[2].legend([r"$\psi_{ref}$", r"$\psi$"])
+axs1[2].legend([r"$\psi_{ref}$", r"$\psi_{Wall}$", r"$\psi$"])
 axs1[2].grid()
 axs1[2].set_xlabel("Time [s]")
 axs1[2].set_ylabel("Yaw [degree]")
