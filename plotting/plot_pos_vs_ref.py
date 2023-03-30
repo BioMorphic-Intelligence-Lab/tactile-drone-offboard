@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle 
+from scipy.spatial.transform import Rotation
+from matplotlib.patches import Polygon 
 from pathlib import Path
 
 from rosbags.typesys import get_types_from_msg, register_types
@@ -9,9 +10,11 @@ from rosbags.serde import deserialize_cdr
 
 from robot import fk
 
+# Define plot resolution and size
 dpi = 250
 size = (20, 10)
 
+# Function for guessing ros message tupe
 def guess_msgtype(path: Path) -> str:
     """Guess message type name from path."""
     name = path.relative_to(path.parents[2]).with_suffix('')
@@ -20,6 +23,7 @@ def guess_msgtype(path: Path) -> str:
     return str(name)
 
 
+# Install non-standard types
 add_types = {}
 
 for pathstr in [
@@ -33,9 +37,14 @@ for pathstr in [
 register_types(add_types)
 
 
-wall_pos = 1.275
 
-path = '/home/anton/Desktop/rosbags/2023_03_28/angled_away_wall/rosbag2-18_55_51-successfull'
+# The time interval we want to plot
+time = (0, 65)
+
+# File path to rosbag
+path = '/home/anton/Desktop/rosbags/2023_03_28/angled_wall/rosbag2-12_19_21-success'
+
+# Topics to collect data from
 topics=['/fmu/in/trajectory_setpoint',
         '/fmu/out/vehicle_odometry',
         '/fmu/in/vehicle_visual_odometry',
@@ -44,7 +53,9 @@ topics=['/fmu/in/trajectory_setpoint',
         '/ee_reference',
         '/wall_pose']
 
-time = (20, 70)
+##############################################################
+############## Load all the data #############################
+##############################################################
 
 # create reader instance and open for reading
 with Reader(path) as reader:
@@ -160,12 +171,24 @@ t_wall = np.array(t_wall, dtype=float)
 wall = np.array(wall, dtype=float)
 wall_q = np.array(wall_q, dtype=float)
 
+#############################################################
+################ Transformations ############################
+#############################################################
+
 # Transform from ned to enu
 T = np.array([[0,1,0],[1,0,0],[0,0,-1]])
+T_q = np.array([[1, 0, 0, 0],
+                [0, 0, 1, 0],
+                [0, 1, 0, 0],
+                [0, 0, 0, -1]])
 reference = np.array([T @ reference[i,:].transpose() for i in range(len(reference))])
+reference_yaw = np.pi/2 - reference_yaw;
 odom = np.array([T @ odom[i,:].transpose() for i in range(len(odom))])
+odom_q = np.array([T_q @ odom_q[i,:].transpose() for i in range(len(odom))])
 mocap = np.array([T @ mocap[i,:].transpose() for i in range(len(mocap))])
+mocap_q = np.array([T_q @ mocap_q[i,:].transpose() for i in range(len(mocap))])
 wall = np.array([T @ wall[i,:].transpose() for i in range(len(wall))])
+wall_q = np.array([T_q @ wall_q[i,:].transpose() for i in range(len(wall_q))])
 
 # Find the odometry points that most closely match the joint_state messages
 odom_subsample = np.array([odom[(np.abs(t_i - t_odom)).argmin(), :] for t_i in t_joint_state])
@@ -191,6 +214,45 @@ wrench_idx = ((np.abs(time[0] - t_wrench)).argmin(), (np.abs(time[1] - t_wrench)
 joint_state_idx = ((np.abs(time[0] - t_joint_state)).argmin(), (np.abs(time[1] - t_joint_state)).argmin())
 ee_ref_idx = ((np.abs(time[0] - t_ee_reference)).argmin(), (np.abs(time[1] - t_ee_reference)).argmin())
 wall_idx = ((np.abs(time[0] - t_wall)).argmin(), (np.abs(time[1] - t_wall)).argmin())
+
+# Transform wrench to body frame
+T = np.array([[0, -1, 0], 
+              [-1, 0, 0],
+              [0, 0, -1]])
+wrench = np.array([T @ f for f in wrench])
+
+T_world = [Rotation.from_quat(
+        np.append(odom_q_subsample[i, 1:4], odom_q_subsample[i,0])
+        ).as_matrix() for i in range(len(joint_state))]
+
+wrench_world = np.array(
+    [T_world[i] @ wrench[i,:]
+        for i in range(len(wrench))])
+
+
+# Get the indeces where the reference was adjusted
+decision_idx = []
+for i in range(ee_ref_idx[0], ee_ref_idx[1]):
+    if np.linalg.norm(ee_reference[i,:] - ee_reference[i+1, :]) > 0:
+        decision_idx += [i]
+
+
+#############################################################
+################ Wall Patch Definition ######################
+#############################################################
+wall_pos = np.mean(wall[:, 0])
+q0_wall = wall_q[:,0]
+q1_wall = wall_q[:,1]
+q2_wall = wall_q[:,2]
+q3_wall = wall_q[:,3] 
+wall_yaw = np.arctan2(
+        2 * ((q1_wall * q2_wall) + (q0_wall * q3_wall)),
+        q0_wall**2 + q1_wall**2 - q2_wall**2 - q3_wall**2
+    )
+
+wall_angle = np.pi/2 -  np.mean(wall_yaw)
+wall_length = 2
+wall_fun = lambda x: np.tan(wall_angle) * x + wall_pos
 
 
 ####################################################
@@ -224,44 +286,70 @@ yaw = np.arctan2(
         q0**2 + q1**2 - q2**2 - q3**2
     )
 
-q0_wall = wall_q[:,0]
-q1_wall = wall_q[:,1]
-q2_wall = wall_q[:,2]
-q3_wall = wall_q[:,3] 
-wall_yaw = np.arctan2(
-        2 * ((q1_wall * q2_wall) + (q0_wall * q3_wall)),
-        q0_wall**2 + q1_wall**2 - q2_wall**2 - q3_wall**2
-    )
-
-axs1[2].plot(t_ref[ref_idx[0]:ref_idx[1]], 180.0 / np.pi * reference_yaw[ref_idx[0]:ref_idx[1]], '--')
-#axs1[2].plot(t_wall[wall_idx[0]:wall_idx[1]], 180.0 / np.pi * wall_yaw[wall_idx[0]:wall_idx[1]], '--')
+axs1[2].plot(t_ref[ref_idx[0]:ref_idx[1]], 180.0 / np.pi * reference_yaw[ref_idx[0]:ref_idx[1]] - 90, '--')
+axs1[2].plot(t_wall[wall_idx[0]:wall_idx[1]], 180.0 / np.pi * wall_yaw[wall_idx[0]:wall_idx[1]] - 90, '--')
 axs1[2].plot(t_odom[odom_idx[0]:odom_idx[1]], 180.0 / np.pi  * yaw[odom_idx[0]:odom_idx[1]], '-')
-axs1[2].legend([r"$\psi_{ref}$", r"$\psi_{Wall}$", r"$\psi$"])
+axs1[2].legend([r"$\psi_{ref}$", r"$\psi_{Wall}", r"$\psi_{odom}$"])
 axs1[2].grid()
 axs1[2].set_xlabel("Time [s]")
 axs1[2].set_ylabel("Yaw [degree]")
 axs1[2].set_xlim(time)
 
+# Plot decision instances
+for i in decision_idx[1:]:
+    axs1[0].axvline(x = t_ee_reference[i], color = "grey")
+    axs1[1].axvline(x = t_ee_reference[i], color = "grey")
+    axs1[2].axvline(x = t_ee_reference[i], color = "grey")
+
 ####################################################
 ############## GT Plot  ############################
 ####################################################
 fig2, axs2 = plt.subplots()
-fig2.gca().set_aspect('equal')
-axs2.plot(odom[odom_idx[0]:odom_idx[1],0], odom[odom_idx[0]:odom_idx[1],1])
-axs2.plot(ee[joint_state_idx[0]:joint_state_idx[1],0], ee[joint_state_idx[0]:joint_state_idx[1],1])
-axs2.add_patch(Rectangle((-2.5,wall_pos), 5, 2, color='gray', alpha=0.4))
+axs2.set_aspect('equal')
+axs2.plot(odom[odom_idx[0]:odom_idx[1],0], odom[odom_idx[0]:odom_idx[1],1], label=r"$GT_{Base}$")
+axs2.plot(ee[joint_state_idx[0]:joint_state_idx[1],0], ee[joint_state_idx[0]:joint_state_idx[1],1], color="orange", label=r"$GT_{EE}$")
+axs2.scatter(ee_reference[ee_ref_idx[0]:ee_ref_idx[1], 0], ee_reference[ee_ref_idx[0]:ee_ref_idx[1], 1], marker="x", color="green", label=r"$p_{ref}$")
+
+for i in decision_idx[1:]:
+    idx_js = np.abs(t_joint_state - t_ee_reference[i]).argmin()
+    arrow = Rotation.from_quat(
+        np.append(odom_q_subsample[idx_js, 1:4], odom_q_subsample[idx_js, 0])
+                              ).as_matrix() @ np.array([0, 0.1, 0])
+
+    axs2.arrow(ee[idx_js, 0], ee[idx_js, 1],
+               arrow[0], arrow[1],
+               color="orange", width = 0.01, label=r"$\psi_{EE}$")
+    axs2.arrow(ee[idx_js, 0], ee[idx_js, 1],
+            wrench_world[idx_js, 0], wrench_world[idx_js, 1], color="red",width=0.01, label=r"$f$")
+    
+    projection = np.cross(wrench_world[idx_js, :],
+                                np.array([0,0,1]))
+    
+    projection = 0.2 * projection / np.linalg.norm(projection)
+    axs2.arrow(ee_reference[i, 0], ee_reference[i, 1],
+               projection[0], projection[1],
+               color="grey")
+
+axs2.add_patch(Polygon(np.array([[-wall_length, wall_fun(-wall_length)], [wall_length, wall_fun(wall_length)],
+                                 [wall_length, 3], [-wall_length, 3],
+                                 ]), color='gray', alpha=0.4, label="Wall"))
+
+
 axs2.grid()
 axs2.set_xlabel("x [m]")
 axs2.set_ylabel("y [m]")
 axs2.set_xlim([min(np.concatenate((odom[odom_idx[0]:odom_idx[1],0],
-                                   ee[joint_state_idx[0]:joint_state_idx[1],0]))) - 0.1,
+                                   ee[joint_state_idx[0]:joint_state_idx[1],0]))) - 0.2,
                max(np.concatenate((odom[odom_idx[0]:odom_idx[1],0],
-                                   ee[joint_state_idx[0]:joint_state_idx[1],0]))) + 0.1])
+                                   ee[joint_state_idx[0]:joint_state_idx[1],0]))) + 0.2])
 axs2.set_ylim([min(np.concatenate((odom[odom_idx[0]:odom_idx[1],1],
-                                   ee[joint_state_idx[0]:joint_state_idx[1],1]))) - 0.1,
+                                   ee[joint_state_idx[0]:joint_state_idx[1],1]))) - 0.2,
                max(np.concatenate((odom[odom_idx[0]:odom_idx[1],1],
-                                   ee[joint_state_idx[0]:joint_state_idx[1],1]))) + 0.1])
-axs2.legend([r"$GT_{base}$",r"$GT_{EE}$"])
+                                   ee[joint_state_idx[0]:joint_state_idx[1],1]))) + 0.2])
+
+handles, labels = fig2.gca().get_legend_handles_labels()
+by_label = dict(zip(labels, handles))
+axs2.legend(by_label.values(), by_label.keys(), loc="lower left", prop={'size': 24}, ncol=2)
 
 
 # Contact Force
@@ -313,7 +401,7 @@ axs4[2].set_xlabel("Time [s]")
 axs4[2].set_ylabel("Yaw [degree]")
 axs4[2].set_xlim(time)
 
-plt.show()
+#plt.show()
 
 # Save the Figures
 fig1.set_size_inches(size)

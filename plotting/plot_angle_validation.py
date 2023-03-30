@@ -21,7 +21,7 @@ def guess_msgtype(path: Path) -> str:
 path = '/home/anton/Desktop/rosbags/2023_03_28/angled_wall/rosbag2-09_27_18-angle_validation'
 topics=['/wrench', '/mocap_pose', '/wall_pose']
 
-time = (55, 130)
+time = (1, 150)
 
 # create reader instance and open for reading
 with Reader(path) as reader:
@@ -91,8 +91,8 @@ wall_idx = ((np.abs(time[0] - t_wall)).argmin(), (np.abs(time[1] - t_wall)).argm
 T = np.array([[-1, 0, 0], 
               [0, 1, 0],
               [0, 0, -1]])
-wrench = np.array([T @ f for f in wrench])
-wrench[:,1] = -wrench[:,1]
+#wrench = np.array([T @ f for f in wrench])
+#wrench[:,1] = -wrench[:,1]
 
 
 fig1, axs1 = plt.subplots()
@@ -114,9 +114,9 @@ wall_yaw = np.arctan2(
         wall_q0**2 + wall_q1**2 - wall_q2**2 - wall_q3**2
     )
 
-estm_yaw =  ((wrench[:,1] > 0) * (1) + (wrench[:,1] < 0) * (-1)) * np.arccos(-wrench[:,0] / np.sqrt(wrench[:,0]**2 + wrench[:,1]**2))
+estm_yaw = np.arctan2(wrench[:,1], wrench[:,0]) #np.arccos(wrench[:,0] / np.sqrt(wrench[:,0]**2 + wrench[:,1]**2))
 
-contact_phases = ((np.abs(wrench[:,0]) > 0.1) & (np.abs(wrench[:,1]) > 0.08) & (wrench[:, 0] < 0) & (np.sqrt(wrench[:, 0]**2 + wrench[:,1]**2) > 0.1)) * 1
+contact_phases = (np.linalg.norm(wrench, axis=1) > 0.4) * 1
 time_temp = np.linspace(t_wrench[0], t_wrench[-1], len(contact_phases));
 
 axs1.plot(t_mocap[mocap_idx[0]:mocap_idx[1]], 180.0 / np.pi * (base_yaw[mocap_idx[0]:mocap_idx[1]] -wall_yaw[wall_idx[0]:wall_idx[1]]) - 180.0)
@@ -140,5 +140,10 @@ axs3.legend([r"$f_x$",r"$f_y$",r"$f_z$"])
 axs3.set_xlim(time)
 axs3.set_ylim([-1,1])
 
-
 plt.show()
+
+# Save the Figures
+fig1.set_size_inches(size)
+fig3.set_size_inches(size)
+fig1.savefig("plots/angles.png", dpi=dpi, bbox_inches='tight')
+fig3.savefig("plots/force.png", dpi=dpi, bbox_inches='tight')
