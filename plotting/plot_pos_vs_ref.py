@@ -9,6 +9,7 @@ from rosbags.rosbag2 import Reader
 from rosbags.serde import deserialize_cdr
 
 from robot import fk
+from robot import rot_z
 
 # Define plot resolution and size
 dpi = 250
@@ -39,10 +40,10 @@ register_types(add_types)
 
 
 # The time interval we want to plot
-time = (0, 65)
+time = (20, 70)
 
 # File path to rosbag
-path = '/home/anton/Desktop/rosbags/2023_03_28/angled_wall/rosbag2-12_19_21-success'
+path = '/home/anton/Desktop/rosbags/rosbag2_2023_03_31-14_14_24'
 
 # Topics to collect data from
 topics=['/fmu/in/trajectory_setpoint',
@@ -209,11 +210,11 @@ t_wall = (t_wall - start_t) * 1e-9
 # Find the indeces for the specified time range
 ref_idx = ((np.abs(time[0] - t_ref)).argmin(), (np.abs(time[1] - t_ref)).argmin())
 odom_idx = ((np.abs(time[0] - t_odom)).argmin(), (np.abs(time[1] - t_odom)).argmin())
-mocap_idx = ((np.abs(time[0] - t_mocap)).argmin(), (np.abs(time[1] - t_mocap)).argmin())
+#mocap_idx = ((np.abs(time[0] - t_mocap)).argmin(), (np.abs(time[1] - t_mocap)).argmin())
 wrench_idx = ((np.abs(time[0] - t_wrench)).argmin(), (np.abs(time[1] - t_wrench)).argmin())
 joint_state_idx = ((np.abs(time[0] - t_joint_state)).argmin(), (np.abs(time[1] - t_joint_state)).argmin())
 ee_ref_idx = ((np.abs(time[0] - t_ee_reference)).argmin(), (np.abs(time[1] - t_ee_reference)).argmin())
-wall_idx = ((np.abs(time[0] - t_wall)).argmin(), (np.abs(time[1] - t_wall)).argmin())
+#wall_idx = ((np.abs(time[0] - t_wall)).argmin(), (np.abs(time[1] - t_wall)).argmin())
 
 # Transform wrench to body frame
 T = np.array([[0, -1, 0], 
@@ -221,13 +222,12 @@ T = np.array([[0, -1, 0],
               [0, 0, -1]])
 wrench = np.array([T @ f for f in wrench])
 
-T_world = [Rotation.from_quat(
+T_world = [rot_z(np.pi/2) @ Rotation.from_quat(
         np.append(odom_q_subsample[i, 1:4], odom_q_subsample[i,0])
         ).as_matrix() for i in range(len(joint_state))]
 
-wrench_world = np.array(
-    [T_world[i] @ wrench[i,:]
-        for i in range(len(wrench))])
+wrench_world = [T_world[np.abs(t_joint_state - t_wrench[i]).argmin()] @ wrench[i,:]
+                    for i in range(len(wrench))]
 
 
 # Get the indeces where the reference was adjusted
@@ -240,19 +240,19 @@ for i in range(ee_ref_idx[0], ee_ref_idx[1]):
 #############################################################
 ################ Wall Patch Definition ######################
 #############################################################
-wall_pos = np.mean(wall[:, 0])
-q0_wall = wall_q[:,0]
-q1_wall = wall_q[:,1]
-q2_wall = wall_q[:,2]
-q3_wall = wall_q[:,3] 
-wall_yaw = np.arctan2(
-        2 * ((q1_wall * q2_wall) + (q0_wall * q3_wall)),
-        q0_wall**2 + q1_wall**2 - q2_wall**2 - q3_wall**2
-    )
+#wall_pos = np.mean(wall[:, 0])
+#q0_wall = wall_q[:,0]
+#q1_wall = wall_q[:,1]
+#q2_wall = wall_q[:,2]
+#q3_wall = wall_q[:,3] 
+#wall_yaw = np.arctan2(
+#        2 * ((q1_wall * q2_wall) + (q0_wall * q3_wall)),
+#        q0_wall**2 + q1_wall**2 - q2_wall**2 - q3_wall**2
+#    )
 
-wall_angle = np.pi/2 -  np.mean(wall_yaw)
-wall_length = 2
-wall_fun = lambda x: np.tan(wall_angle) * x + wall_pos
+#wall_angle = np.pi/2 -  np.mean(wall_yaw)
+#wall_length = 2
+#wall_fun = lambda x: np.tan(wall_angle) * x + wall_pos
 
 
 ####################################################
@@ -284,12 +284,12 @@ q3 = odom_q[:,3]
 yaw = np.arctan2(
         2 * ((q1 * q2) + (q0 * q3)),
         q0**2 + q1**2 - q2**2 - q3**2
-    )
+    ) + np.pi/2
 
-axs1[2].plot(t_ref[ref_idx[0]:ref_idx[1]], 180.0 / np.pi * reference_yaw[ref_idx[0]:ref_idx[1]] - 90, '--')
-axs1[2].plot(t_wall[wall_idx[0]:wall_idx[1]], 180.0 / np.pi * wall_yaw[wall_idx[0]:wall_idx[1]] - 90, '--')
+axs1[2].plot(t_ref[ref_idx[0]:ref_idx[1]], 180.0 / np.pi * reference_yaw[ref_idx[0]:ref_idx[1]], '--')
 axs1[2].plot(t_odom[odom_idx[0]:odom_idx[1]], 180.0 / np.pi  * yaw[odom_idx[0]:odom_idx[1]], '-')
-axs1[2].legend([r"$\psi_{ref}$", r"$\psi_{Wall}", r"$\psi_{odom}$"])
+#axs1[2].plot(t_wall[wall_idx[0]:wall_idx[1]], 180.0 / np.pi * wall_yaw[wall_idx[0]:wall_idx[1]] - 90, '--')
+axs1[2].legend([r"$\psi_{ref}$", r"$\psi_{odom}$", r"$\psi_{Wall}"])
 axs1[2].grid()
 axs1[2].set_xlabel("Time [s]")
 axs1[2].set_ylabel("Yaw [degree]")
@@ -312,17 +312,17 @@ axs2.scatter(ee_reference[ee_ref_idx[0]:ee_ref_idx[1], 0], ee_reference[ee_ref_i
 
 for i in decision_idx[1:]:
     idx_js = np.abs(t_joint_state - t_ee_reference[i]).argmin()
-    arrow = Rotation.from_quat(
-        np.append(odom_q_subsample[idx_js, 1:4], odom_q_subsample[idx_js, 0])
-                              ).as_matrix() @ np.array([0, 0.1, 0])
+    idx_wrench = np.abs(t_wrench - t_ee_reference[i]).argmin()
+
+    arrow = T_world[idx_js] @ np.array([0, 0.1, 0])
 
     axs2.arrow(ee[idx_js, 0], ee[idx_js, 1],
                arrow[0], arrow[1],
                color="orange", width = 0.01, label=r"$\psi_{EE}$")
     axs2.arrow(ee[idx_js, 0], ee[idx_js, 1],
-            wrench_world[idx_js, 0], wrench_world[idx_js, 1], color="red",width=0.01, label=r"$f$")
+            wrench_world[idx_wrench][0], wrench_world[idx_wrench][1], color="red",width=0.01, label=r"$f$")
     
-    projection = np.cross(wrench_world[idx_js, :],
+    projection = np.cross(wrench_world[idx_wrench],
                                 np.array([0,0,1]))
     
     projection = 0.2 * projection / np.linalg.norm(projection)
@@ -330,9 +330,9 @@ for i in decision_idx[1:]:
                projection[0], projection[1],
                color="grey")
 
-axs2.add_patch(Polygon(np.array([[-wall_length, wall_fun(-wall_length)], [wall_length, wall_fun(wall_length)],
-                                 [wall_length, 3], [-wall_length, 3],
-                                 ]), color='gray', alpha=0.4, label="Wall"))
+#axs2.add_patch(Polygon(np.array([[-wall_length, wall_fun(-wall_length)], [wall_length, wall_fun(wall_length)],
+#                                 [wall_length, 3], [-wall_length, 3],
+#                                 ]), color='gray', alpha=0.4, label="Wall"))
 
 
 axs2.grid()
@@ -349,7 +349,7 @@ axs2.set_ylim([min(np.concatenate((odom[odom_idx[0]:odom_idx[1],1],
 
 handles, labels = fig2.gca().get_legend_handles_labels()
 by_label = dict(zip(labels, handles))
-axs2.legend(by_label.values(), by_label.keys(), loc="lower left", prop={'size': 24}, ncol=2)
+#axs2.legend(by_label.values(), by_label.keys(), loc="lower left", prop={'size': 24}, ncol=2)
 
 
 # Contact Force
