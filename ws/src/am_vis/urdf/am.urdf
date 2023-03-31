@@ -26,8 +26,8 @@
   <!-- ****************** ROBOT FLYING BASE ************************************  -->
   <link name="base">
     <visual>
-      <!--<origin xyz="0 -0.57 -0.23"/>-->
-      <origin xyz="-0.18 -0.75 -0.41" rpy="${pi2} 0 ${0.75 * pi}"/>
+      <!--<origin xyz="-0.18 -0.75 -0.41" rpy="${pi2} 0 ${0.75 * pi}"/>-->
+      <origin xyz="0.75 -0.18 -0.41" rpy="${pi2} 0 ${0.75 * pi + pi2}"/>
       <geometry>
         <mesh filename="package://am_vis/meshes/HolybroX500V2-withOBC.STL"
               scale="0.001 0.001 0.001"/>
@@ -129,7 +129,7 @@
   <joint name="arm_connector" type="fixed">
     <parent link="base"/>
     <child link="arm_base" />
-    <origin xyz="0.27875 0.0 -0.018" rpy="0 ${pi} 0"/>
+    <origin xyz="0.0 0.27875 -0.018" rpy="0 ${pi} ${pi2}"/>
   </joint>
 
   <joint name="base_joint_pitch" type="revolute">
