@@ -37,8 +37,12 @@ class PX4TopicTransformer : public rclcpp::Node
       Eigen::Quaterniond orientation = px4_ros_com::frame_transforms::utils::quaternion::array_to_eigen_quat(msg->q);
       Eigen::Vector3d position = Eigen::Vector3d(msg->position[0], msg->position[1], msg->position[2]);
 
-      orientation = px4_ros_com::frame_transforms::ned_to_enu_orientation(   
-                               px4_ros_com::frame_transforms::baselink_to_aircraft_orientation(orientation));
+
+      // NED to ENU
+      Eigen::Quaterniond q_copy(orientation);
+      orientation.x() = q_copy.y();
+      orientation.y() = q_copy.x();
+      orientation.z() = -q_copy.z();
 
       position = px4_ros_com::frame_transforms::ned_to_enu_local_frame(position);                                                                  
                                                                     
