@@ -17,11 +17,22 @@ def guess_msgtype(path: Path) -> str:
     return str(name)
 
 
+# Install non-standard types
+add_types = {}
 
-path = '/home/anton/Desktop/rosbags/2023_03_28/angled_wall/rosbag2-09_27_18-angle_validation'
+for pathstr in [
+    '/home/anton/Desktop/px4_ros_com_ros2/src/px4_msgs/msg/VehicleOdometry.msg'
+]:
+    msgpath = Path(pathstr)
+    msgdef = msgpath.read_text(encoding='utf-8')
+    add_types.update(get_types_from_msg(msgdef, guess_msgtype(msgpath)))
+
+register_types(add_types)
+
+path = '/home/anton/Desktop/rosbags/2023_04_04/straight_wall/rosbag2-15_02_15-manual'
 topics=['/wrench', '/mocap_pose', '/wall_pose']
 
-time = (1, 150)
+time = (1, 80)
 
 # create reader instance and open for reading
 with Reader(path) as reader:
@@ -30,9 +41,9 @@ with Reader(path) as reader:
     t_wrench = []
     wrench = []
 
-    t_mocap = []
-    mocap = []
-    mocap_q = []
+    t_odom = []
+    odom = []
+    odom_q = []
 
     t_wall = []
     wall = []
@@ -51,10 +62,9 @@ with Reader(path) as reader:
 
         if connection.topic == topics[1]:
             msg = deserialize_cdr(rawdata, connection.msgtype)
-            t_mocap += [timestamp]
-            mocap += [[msg.pose.position.x,msg.pose.position.y,msg.pose.position.z]]
-            mocap_q += [[msg.pose.orientation.w, msg.pose.orientation.x,
-                         msg.pose.orientation.y, msg.pose.orientation.z]]
+            t_odom += [timestamp]
+            odom += [[msg.pose.position.x,msg.pose.position.y,msg.pose.position.z]]
+            odom_q += [[msg.pose.orientation.w, msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z]]
         
         if connection.topic == topics[2]:
             msg = deserialize_cdr(rawdata, connection.msgtype)
@@ -68,23 +78,23 @@ with Reader(path) as reader:
 t_wrench = np.array(t_wrench, dtype=float)
 wrench = np.array(wrench, dtype=float)
 
-t_mocap = np.array(t_mocap, dtype=float)
-mocap = np.array(mocap, dtype=float)
-mocap_q = np.array(mocap_q, dtype=float)
+t_odom = np.array(t_odom, dtype=float)
+odom = np.array(odom, dtype=float)
+odom_q = np.array(odom_q, dtype=float)
 
 t_wall = np.array(t_wall, dtype=float)
 wall = np.array(wall, dtype=float)
 wall_q = np.array(wall_q, dtype=float)
 
 # Find start time and shift time scale and turn it into seconds
-start_t = min(np.concatenate((t_wrench, t_mocap, t_wall)))
+start_t = min(np.concatenate((t_wrench, t_odom, t_wall)))
 t_wrench = (t_wrench - start_t) * 1e-9
-t_mocap = (t_mocap - start_t) * 1e-9
+t_odom = (t_odom - start_t) * 1e-9
 t_wall = (t_wall - start_t) * 1e-9
 
 # Find the indeces for the specified time range
 wrench_idx = ((np.abs(time[0] - t_wrench)).argmin(), (np.abs(time[1] - t_wrench)).argmin())
-mocap_idx = ((np.abs(time[0] - t_mocap)).argmin(), (np.abs(time[1] - t_mocap)).argmin())
+odom_idx = ((np.abs(time[0] - t_odom)).argmin(), (np.abs(time[1] - t_odom)).argmin())
 wall_idx = ((np.abs(time[0] - t_wall)).argmin(), (np.abs(time[1] - t_wall)).argmin())
 
 # Transform wrench into base coordinates
@@ -92,18 +102,21 @@ T = np.array([[-1, 0, 0],
               [0, 1, 0],
               [0, 0, -1]])
 #wrench = np.array([T @ f for f in wrench])
-#wrench[:,1] = -wrench[:,1]
+
 
 
 fig1, axs1 = plt.subplots()
-base_q0 = mocap_q[:,0]
-base_q1 = mocap_q[:,1]
-base_q2 = mocap_q[:,2]
-base_q3 = mocap_q[:,3]
+base_q0 = odom_q[:,0]
+base_q1 = odom_q[:,1]
+base_q2 = odom_q[:,2]
+base_q3 = odom_q[:,3]
 base_yaw = np.arctan2(
         2 * ((base_q1 * base_q2) + (base_q0 * base_q3)),
         base_q0**2 + base_q1**2 - base_q2**2 - base_q3**2
-    )
+    ) - np.pi/2
+
+base_yaw_subsample = np.array([base_yaw[np.abs(t_odom - t).argmin()] for t in t_wall])
+
 
 wall_q0 = wall_q[:,0]
 wall_q1 = wall_q[:,1]
@@ -119,15 +132,15 @@ estm_yaw = np.arctan2(wrench[:,1], wrench[:,0]) #np.arccos(wrench[:,0] / np.sqrt
 contact_phases = (np.linalg.norm(wrench, axis=1) > 0.4) * 1
 time_temp = np.linspace(t_wrench[0], t_wrench[-1], len(contact_phases));
 
-axs1.plot(t_mocap[mocap_idx[0]:mocap_idx[1]], 180.0 / np.pi * (base_yaw[mocap_idx[0]:mocap_idx[1]] -wall_yaw[wall_idx[0]:wall_idx[1]]) - 180.0)
-axs1.plot(t_wrench[wrench_idx[0]:wrench_idx[1]], 180.0 / np.pi * estm_yaw[wrench_idx[0]:wrench_idx[1]])
+axs1.plot(t_odom[odom_idx[0]:odom_idx[1]], 180.0 / np.pi * (base_yaw_subsample[wall_idx[0]:wall_idx[1]] - wall_yaw[wall_idx[0]:wall_idx[1]]))
+axs1.plot(t_wrench[wrench_idx[0]:wrench_idx[1]], 180.0 / np.pi * estm_yaw[wrench_idx[0]:wrench_idx[1]] * contact_phases[wrench_idx[0]:wrench_idx[1]])
 axs1.fill_between(time_temp[wrench_idx[0]:wrench_idx[1]], 40 * contact_phases[wrench_idx[0]:wrench_idx[1]], -40 * contact_phases[wrench_idx[0]:wrench_idx[1]], alpha=0.4)
 axs1.grid()
 axs1.legend(["Motion Capture Relative Angle", "Estimated Angle"])
 axs1.set_xlabel("Time [s]")
 axs1.set_ylabel("Angle [Degree]")
 axs1.set_xlim(time)
-axs1.set_ylim([-40, 40])
+axs1.set_ylim([-90, 90])
 fig1.set_size_inches(size)
 
 fig3, axs3 = plt.subplots()

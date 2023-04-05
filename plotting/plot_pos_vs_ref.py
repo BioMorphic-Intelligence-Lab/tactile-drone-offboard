@@ -40,10 +40,10 @@ register_types(add_types)
 
 
 # The time interval we want to plot
-time = (20, 70)
+time = (30, 80)
 
 # File path to rosbag
-path = '/home/anton/Desktop/rosbags/rosbag2_2023_03_31-14_14_24'
+path = '/home/anton/Desktop/rosbags/2023_04_04/straight_wall/rosbag2-18_15_43-success'
 
 # Topics to collect data from
 topics=['/fmu/in/trajectory_setpoint',
@@ -214,7 +214,7 @@ odom_idx = ((np.abs(time[0] - t_odom)).argmin(), (np.abs(time[1] - t_odom)).argm
 wrench_idx = ((np.abs(time[0] - t_wrench)).argmin(), (np.abs(time[1] - t_wrench)).argmin())
 joint_state_idx = ((np.abs(time[0] - t_joint_state)).argmin(), (np.abs(time[1] - t_joint_state)).argmin())
 ee_ref_idx = ((np.abs(time[0] - t_ee_reference)).argmin(), (np.abs(time[1] - t_ee_reference)).argmin())
-#wall_idx = ((np.abs(time[0] - t_wall)).argmin(), (np.abs(time[1] - t_wall)).argmin())
+wall_idx = ((np.abs(time[0] - t_wall)).argmin(), (np.abs(time[1] - t_wall)).argmin())
 
 # Transform wrench to body frame
 T = np.array([[0, -1, 0], 
@@ -222,7 +222,7 @@ T = np.array([[0, -1, 0],
               [0, 0, -1]])
 wrench = np.array([T @ f for f in wrench])
 
-T_world = [rot_z(np.pi/2) @ Rotation.from_quat(
+T_world = [Rotation.from_quat(
         np.append(odom_q_subsample[i, 1:4], odom_q_subsample[i,0])
         ).as_matrix() for i in range(len(joint_state))]
 
@@ -240,19 +240,19 @@ for i in range(ee_ref_idx[0], ee_ref_idx[1]):
 #############################################################
 ################ Wall Patch Definition ######################
 #############################################################
-#wall_pos = np.mean(wall[:, 0])
-#q0_wall = wall_q[:,0]
-#q1_wall = wall_q[:,1]
-#q2_wall = wall_q[:,2]
-#q3_wall = wall_q[:,3] 
-#wall_yaw = np.arctan2(
-#        2 * ((q1_wall * q2_wall) + (q0_wall * q3_wall)),
-#        q0_wall**2 + q1_wall**2 - q2_wall**2 - q3_wall**2
-#    )
+wall_pos = np.mean(wall[:, 0])
+q0_wall = wall_q[:,0]
+q1_wall = wall_q[:,1]
+q2_wall = wall_q[:,2]
+q3_wall = wall_q[:,3] 
+wall_yaw = np.arctan2(
+        2 * ((q1_wall * q2_wall) + (q0_wall * q3_wall)),
+        q0_wall**2 + q1_wall**2 - q2_wall**2 - q3_wall**2
+    )
 
-#wall_angle = np.pi/2 -  np.mean(wall_yaw)
-#wall_length = 2
-#wall_fun = lambda x: np.tan(wall_angle) * x + wall_pos
+wall_angle = np.mean(wall_yaw)
+wall_length = 2.25
+wall_fun = lambda x: np.tan(wall_angle) * x + wall_pos
 
 
 ####################################################
@@ -284,12 +284,12 @@ q3 = odom_q[:,3]
 yaw = np.arctan2(
         2 * ((q1 * q2) + (q0 * q3)),
         q0**2 + q1**2 - q2**2 - q3**2
-    ) + np.pi/2
+    )
 
-axs1[2].plot(t_ref[ref_idx[0]:ref_idx[1]], 180.0 / np.pi * reference_yaw[ref_idx[0]:ref_idx[1]], '--')
+axs1[2].plot(t_ref[ref_idx[0]:ref_idx[1]], 180.0 / np.pi * reference_yaw[ref_idx[0]:ref_idx[1]] - 90, '--')
 axs1[2].plot(t_odom[odom_idx[0]:odom_idx[1]], 180.0 / np.pi  * yaw[odom_idx[0]:odom_idx[1]], '-')
-#axs1[2].plot(t_wall[wall_idx[0]:wall_idx[1]], 180.0 / np.pi * wall_yaw[wall_idx[0]:wall_idx[1]] - 90, '--')
-axs1[2].legend([r"$\psi_{ref}$", r"$\psi_{odom}$", r"$\psi_{Wall}"])
+axs1[2].plot(t_wall[wall_idx[0]:wall_idx[1]], 180.0 / np.pi * wall_yaw[wall_idx[0]:wall_idx[1]], '--')
+axs1[2].legend([r"$\psi_{ref}$", r"$\psi_{odom}$", r"$\psi_{Wall}$"])
 axs1[2].grid()
 axs1[2].set_xlabel("Time [s]")
 axs1[2].set_ylabel("Yaw [degree]")
@@ -308,13 +308,14 @@ fig2, axs2 = plt.subplots()
 axs2.set_aspect('equal')
 axs2.plot(odom[odom_idx[0]:odom_idx[1],0], odom[odom_idx[0]:odom_idx[1],1], label=r"$GT_{Base}$")
 axs2.plot(ee[joint_state_idx[0]:joint_state_idx[1],0], ee[joint_state_idx[0]:joint_state_idx[1],1], color="orange", label=r"$GT_{EE}$")
-axs2.scatter(ee_reference[ee_ref_idx[0]:ee_ref_idx[1], 0], ee_reference[ee_ref_idx[0]:ee_ref_idx[1], 1], marker="x", color="green", label=r"$p_{ref}$")
+axs2.scatter(ee_reference[ee_ref_idx[0]:ee_ref_idx[1], 0], ee_reference[ee_ref_idx[0]:ee_ref_idx[1], 1], marker="x", color="green", label=r"$p_{EE,ref}$")
+axs2.scatter(reference[ref_idx[0]:ref_idx[1], 0], reference[ref_idx[0]:ref_idx[1], 1], marker="x", color="blue", label=r"$p_{ref}$")
 
 for i in decision_idx[1:]:
     idx_js = np.abs(t_joint_state - t_ee_reference[i]).argmin()
-    idx_wrench = np.abs(t_wrench - t_ee_reference[i]).argmin()
+    idx_wrench = np.abs(t_wrench - t_ref[i]).argmin() + 1
 
-    arrow = T_world[idx_js] @ np.array([0, 0.1, 0])
+    arrow = T_world[idx_js] @  np.array([0, 0.1, 0])
 
     axs2.arrow(ee[idx_js, 0], ee[idx_js, 1],
                arrow[0], arrow[1],
@@ -326,33 +327,35 @@ for i in decision_idx[1:]:
                                 np.array([0,0,1]))
     
     projection = 0.2 * projection / np.linalg.norm(projection)
-    axs2.arrow(ee_reference[i, 0], ee_reference[i, 1],
-               projection[0], projection[1],
-               color="grey")
+    #axs2.arrow(reference[i, 0], reference[i, 1],
+    #           projection[0], projection[1],
+    #           color="grey")
 
-#axs2.add_patch(Polygon(np.array([[-wall_length, wall_fun(-wall_length)], [wall_length, wall_fun(wall_length)],
-#                                 [wall_length, 3], [-wall_length, 3],
-#                                 ]), color='gray', alpha=0.4, label="Wall"))
+axs2.add_patch(Polygon(np.array([[-wall_length, wall_fun(-wall_length)], [wall_length, wall_fun(wall_length)],
+                                 [wall_length, 3], [-wall_length, 3],
+                                 ]), color='gray', alpha=0.4, label="Wall"))
 
 
 axs2.grid()
 axs2.set_xlabel("x [m]")
 axs2.set_ylabel("y [m]")
-axs2.set_xlim([min(np.concatenate((odom[odom_idx[0]:odom_idx[1],0],
-                                   ee[joint_state_idx[0]:joint_state_idx[1],0]))) - 0.2,
-               max(np.concatenate((odom[odom_idx[0]:odom_idx[1],0],
-                                   ee[joint_state_idx[0]:joint_state_idx[1],0]))) + 0.2])
-axs2.set_ylim([min(np.concatenate((odom[odom_idx[0]:odom_idx[1],1],
-                                   ee[joint_state_idx[0]:joint_state_idx[1],1]))) - 0.2,
-               max(np.concatenate((odom[odom_idx[0]:odom_idx[1],1],
-                                   ee[joint_state_idx[0]:joint_state_idx[1],1]))) + 0.2])
+#axs2.set_xlim([min(np.concatenate((odom[odom_idx[0]:odom_idx[1],0],
+#                                   ee[joint_state_idx[0]:joint_state_idx[1],0]))) - 0.2,
+#               max(np.concatenate((odom[odom_idx[0]:odom_idx[1],0],
+#                                   ee[joint_state_idx[0]:joint_state_idx[1],0]))) + 0.2])
+#axs2.set_ylim([min(np.concatenate((odom[odom_idx[0]:odom_idx[1],1],
+#                                   ee[joint_state_idx[0]:joint_state_idx[1],1]))) - 0.2,
+#               max(np.concatenate((odom[odom_idx[0]:odom_idx[1],1],
+#                                   ee[joint_state_idx[0]:joint_state_idx[1],1]))) + 0.2])
 
 handles, labels = fig2.gca().get_legend_handles_labels()
 by_label = dict(zip(labels, handles))
-#axs2.legend(by_label.values(), by_label.keys(), loc="lower left", prop={'size': 24}, ncol=2)
+axs2.legend(by_label.values(), by_label.keys(), loc="lower left", prop={'size': 24}, ncol=2)
 
 
-# Contact Force
+################################################################
+########################## Contact Force #######################
+################################################################
 fig3, axs3 = plt.subplots()
 axs3.plot(t_wrench[wrench_idx[0]:wrench_idx[1]], wrench[wrench_idx[0]:wrench_idx[1],:])
 axs3.grid()
@@ -387,15 +390,16 @@ q0_ref = ee_reference_q[:,0]
 q1_ref = ee_reference_q[:,1]
 q2_ref = ee_reference_q[:,2]
 q3_ref = ee_reference_q[:,3] 
-ee_yaw_ref = np.pi / 2 - np.arctan2(
+ee_yaw_ref = np.arctan2(
         2 * ((q1_ref * q2_ref) + (q0_ref * q3_ref)),
         q0_ref**2 + q1_ref**2 - q2_ref**2 - q3_ref**2
     )
 
 
-axs4[2].plot(t_ee_reference[ee_ref_idx[0]:ee_ref_idx[1]], 180.0 / np.pi  * ee_yaw_ref[ee_ref_idx[0]:ee_ref_idx[1]], '--')
+axs4[2].plot(t_ee_reference[ee_ref_idx[0]:ee_ref_idx[1]], 180.0 / np.pi  * ee_yaw_ref[ee_ref_idx[0]:ee_ref_idx[1]] - 90, '--')
 axs4[2].plot(t_odom[odom_idx[0]:odom_idx[1]], 180.0 / np.pi  * yaw[odom_idx[0]:odom_idx[1]], '-')
-axs4[2].legend([r"$\psi_{EE,ref}$", r"$\psi_{EE}$"])
+axs4[2].plot(t_wall[wall_idx[0]:wall_idx[1]], 180.0 / np.pi * wall_yaw[wall_idx[0]:wall_idx[1]] + 90, '--')
+axs4[2].legend([r"$\psi_{EE,ref}$", r"$\psi_{EE}$", r"$\psi_{Wall}$"])
 axs4[2].grid()
 axs4[2].set_xlabel("Time [s]")
 axs4[2].set_ylabel("Yaw [degree]")

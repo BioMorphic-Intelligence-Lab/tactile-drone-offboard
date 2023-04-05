@@ -34,7 +34,7 @@ alignments = [rot_x(0) @ rot_y(0) @ rot_z(0),           # 0
               rot_x(0) @ rot_y(0) @ rot_z(- np.pi / 2)  # 4
              ]
 base = rot_x(np.pi) @ rot_y(0) @ rot_z(np.pi / 2)
-offset = np.array([0.0, 0.2, 0.0])
+offset = np.array([0.0, 0.4, 0.0])
 
 def fk(x: np.ndarray, q: np.ndarray, xi: np.ndarray) -> np.ndarray:
      r = R.from_quat(q).as_matrix()
