@@ -1,0 +1,42 @@
+<?xml version="1.0" ?>
+<robot name="am_vis" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- ****************** MATHS CONSTANTS *******************************  -->
+  <!-- Define generic, usefule maths constants -->
+  <xacro:property name="pi2" value="1.57079632679"/>
+
+  <!-- ****************** ROBOT CONSTANTS *******************************  -->
+  <!-- Define the size of the robot's main chassis in meters -->
+  <xacro:property name="width" value="0.03"/>
+  <xacro:property name="length" value="0.02"/>
+  <xacro:property name="joint_offset" value="0.04"/>
+
+  <material name="black">
+    <color rgba="0.0 0.0 0.0 1.0"/>
+  </material>
+
+  <material name="trans_grey">
+    <color rgba="${100/255} ${100/255} ${100/255} 0.35"/>
+  </material>
+
+
+  <!-- ****************** WALL ************************************  -->
+  
+  <link name="wall">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0.0 0.0"/>
+      <geometry>
+           <box size="0.1 2 1"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin xyz="0.0 0.0 0.0"/>
+      <geometry>
+           <box size="0.1 2 1"/>
+      </geometry>
+      <material name="trans_grey"/>
+    </collision>
+  </link>
+
+</robot>
