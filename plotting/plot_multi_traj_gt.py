@@ -8,13 +8,10 @@ from rosbags.typesys import get_types_from_msg, register_types
 from rosbags.rosbag2 import Reader
 from rosbags.serde import deserialize_cdr
 
+from plotting_settings import *
+
 from robot import fk
 from robot import rot_z
-
-# Define plot resolution and size
-dpi = 250
-size = (20, 10)
-text_size = 24
 
 # Function for guessing ros message tupe
 def guess_msgtype(path: Path) -> str:
@@ -75,20 +72,30 @@ register_types(add_types)
 
 
 # The time interval we want to plot
-times = [(23, 44), (17.5, 42.5), (15, 38.75), (12.5, 38.5), (10, 47.5)]
+times = [(13, 40), (30, 52.5),(12.5, 38),(15, 35),(12.5, 42.5)]
 
-# Angled Towards Path
+# Angled Away Times
+# [(23, 44), (17.5, 42.5), (15, 38.75), (12.5, 38.5), (10, 47.5)]
+
+# Angled Towards Times
 # [(13, 40), (30, 52.5),(12.5, 38),(15, 35),(12.5, 42.5)]
 
 # Straight Wall Times
 # [(15, 42.5), (15, 45), (15, 47), (15, 42.5), (15, 43), (15, 39), (15, 38)]
 
 # File path to rosbag
-paths = ['/home/anton/Desktop/rosbags/2023_04_05/angled_away/rosbag2-21_54_24-success1',
-         '/home/anton/Desktop/rosbags/2023_04_06/angled_away/rosbag2-07_40_34-success2',
-         '/home/anton/Desktop/rosbags/2023_04_06/angled_away/rosbag2-07_43_29-success3',
-         '/home/anton/Desktop/rosbags/2023_04_06/angled_away/rosbag2-07_46_04-success4',
-         '/home/anton/Desktop/rosbags/2023_04_06/angled_away/rosbag2-07_48_58-success5']
+paths = ['/home/anton/Desktop/rosbags/2023_04_05/angled_towards/rosbag2-20_48_20-success1',
+         '/home/anton/Desktop/rosbags/2023_04_05/angled_towards/rosbag2-20_54_53-success2',
+         '/home/anton/Desktop/rosbags/2023_04_05/angled_towards/rosbag2-20_59_21-success3',
+         '/home/anton/Desktop/rosbags/2023_04_05/angled_towards/rosbag2-21_49_35-success4',
+         '/home/anton/Desktop/rosbags/2023_04_05/angled_towards/rosbag2-21_52_07-success5']
+
+#Angled Away Path
+# ['/home/anton/Desktop/rosbags/2023_04_05/angled_away/rosbag2-21_54_24-success1',
+#         '/home/anton/Desktop/rosbags/2023_04_06/angled_away/rosbag2-07_40_34-success2',
+#         '/home/anton/Desktop/rosbags/2023_04_06/angled_away/rosbag2-07_43_29-success3',
+#         '/home/anton/Desktop/rosbags/2023_04_06/angled_away/rosbag2-07_46_04-success4',
+#         '/home/anton/Desktop/rosbags/2023_04_06/angled_away/rosbag2-07_48_58-success5']
 
 
 # Angled Towards Path
@@ -105,7 +112,7 @@ paths = ['/home/anton/Desktop/rosbags/2023_04_05/angled_away/rosbag2-21_54_24-su
 #         '/home/anton/Desktop/rosbags/2023_04_05/straight_wall/rosbag2-20_44_41-success5',
 #         '/home/anton/Desktop/rosbags/2023_04_06/straight_wall/rosbag2-09_12_22-success1',
 #         '/home/anton/Desktop/rosbags/2023_04_06/straight_wall/rosbag2-09_17_48-success2',
-#         '/home/anton/Desktop/rosbags/2023_04_06/straight_wall/rosbag2-09_22_41-success3',]
+#         '/home/anton/Desktop/rosbags/2023_04_06/straight_wall/rosbag2-09_22_41-success3']
 
 
 
@@ -130,8 +137,8 @@ fig, axs = plt.subplots()
 axs.set_aspect('equal')
 
 axs.grid()
-axs.set_xlabel("x [m]")
-axs.set_ylabel("y [m]")
+axs.set_xlabel("x [m]", fontsize=text_size)
+axs.set_ylabel("y [m]", fontsize=text_size)
 axs.set_xlim([-2.2, 0.5])
 axs.set_ylim([-0.75, 2.5])
 
@@ -291,7 +298,7 @@ for idx, path in enumerate(paths[:6]):
                                         [wall_length, wall_fun(wall_length)],
                                         [wall_length, 3], [-wall_length, 3],
                                        ]),
-                              color='gray', alpha=0.4, label='_nolegend_',
+                              color='gray', alpha=1, label='_nolegend_',
                               zorder=0))
 
 
@@ -308,7 +315,7 @@ for idx, path in enumerate(paths[:6]):
     ###########################################################
     ############# Plot the current data #######################
     ###########################################################
-    axs.plot(ee[:, 0], ee[:, 1], color="black", alpha=0.4, zorder=20)
+    axs.plot(ee[:, 0], ee[:, 1], color="black", alpha=0.4, zorder=20, lw=lw)
 
     ###########################################################
     axs_t[0].plot(t_ee, ee[:, 0], color="grey")
@@ -345,11 +352,11 @@ draw_error_band(axs_t[0], t_mean, mean[:,0], std[:,0], facecolor="orange", alpha
 draw_error_band(axs_t[1], t_mean, mean[:,1], std[:,1], facecolor="orange", alpha=.3,label=r"$\sigma_x$")
 draw_error_band(axs_t[2], t_mean, mean[:,2], std[:,2], facecolor="orange", alpha=.3,label=r"$\sigma_x$")
 
-axs.plot(mean[:, 0], mean[:,1], color="orange", label=r"$\mu_{EE}$", path_effects=[pe.Stroke(linewidth=2, foreground='black'), pe.Normal()], zorder=21)
+axs.plot(mean[:, 0], mean[:,1], color=colors["ee"], label=r"$\mu_{EE}$", path_effects=[pe.Stroke(linewidth=lw, foreground='black'), pe.Normal()], zorder=21)
 
 forward = np.concatenate(([[1, 0]], np.diff(mean[:,:2], axis=0)), axis=0)
 err = [get_normal_error(std[i, :], forward[i,:]) for i in range(len(std))]
-draw_error_band(axs, mean[:, 0], mean[:,1], err, facecolor="orange", edgecolor="none", alpha=.5, zorder=15, label=r"$\sigma_{EE}$")
+draw_error_band(axs, mean[:, 0], mean[:,1], err, facecolor=colors["ee"], edgecolor="none", alpha=.5, zorder=15, label=r"$\sigma_{EE}$")
 
 # Set Legend
 axs.legend(loc="lower left", prop={'size': text_size}, ncol=2, labelspacing=0.1, columnspacing=0.5)

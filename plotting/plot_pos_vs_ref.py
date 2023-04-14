@@ -8,13 +8,11 @@ from rosbags.typesys import get_types_from_msg, register_types
 from rosbags.rosbag2 import Reader
 from rosbags.serde import deserialize_cdr
 
+from plotting_settings import *
+
 from robot import fk
 from robot import rot_z
 
-# Define plot resolution and size
-dpi = 250
-size = (20, 10)
-text_size = 24
 
 # Function for guessing ros message tupe
 def guess_msgtype(path: Path) -> str:
@@ -41,12 +39,16 @@ register_types(add_types)
 
 
 # The time interval we want to plot
-time = (5, 50)
-#(22.5, 60)
-#(7.5, 52.5)
+time = (30, 60)
+# Angled Away (15, 50)
+# Failure Mode (30, 90)
+# Angled Towards (30, 60)
+# Straight Wall (17.5, 52.5)
 
 # File path to rosbag
-path = '/home/anton/Desktop/rosbags/2023_04_06/angled_away/rosbag2-07_40_34-success2'
+path = '/home/anton/Desktop/rosbags/2023_04_05/angled_towards/rosbag2-20_54_53-success2'
+#'/home/anton/Desktop/rosbags/2023_04_05/straight_wall/rosbag2-20_37_14-succsemiess_away-and-to-the-wall'
+#'/home/anton/Desktop/rosbags/2023_04_06/angled_away/rosbag2-07_40_34-success2'
 #'/home/anton/Desktop/rosbags/2023_04_05/angled_towards/rosbag2-20_54_53-success2'
 #'/home/anton/Desktop/rosbags/2023_04_05/straight_wall/rosbag2-19_45_11-success2'
 
@@ -264,21 +266,27 @@ wall_fun = lambda x: np.tan(wall_angle) * x + (wall_pos[0] - np.tan(wall_angle) 
 ####################################################
 ############ Base Position and Reference ###########
 ####################################################
-fig1, axs1 = plt.subplots(3, sharex="all")
-axs1[0].plot(t_ref[ref_idx[0]:ref_idx[1]], reference[ref_idx[0]:ref_idx[1],2], '--', color="grey")
-axs1[0].plot(t_odom[odom_idx[0]:odom_idx[1]], odom[odom_idx[0]:odom_idx[1],2], '-')
-axs1[0].legend([r"$z_{ref}$", r"$z_{odom}$",r"$z_{mocap}$"], loc="lower center", prop={'size': text_size}, ncol=2, labelspacing=0.1, columnspacing=0.5)
-axs1[0].grid()
-axs1[0].set_ylabel("Height [m]")
-axs1[0].set_xlim(time)
+fig1, axs1 = plt.subplots(2, sharex="all")
+#axs1[0].plot(t_ref[ref_idx[0]:ref_idx[1]] - t_ref[ref_idx[0]],
+#             reference[ref_idx[0]:ref_idx[1],2], '--', color="grey", lw=lw)
+#axs1[0].plot(t_odom[odom_idx[0]:odom_idx[1]] - t_odom[odom_idx[0]],
+#             odom[odom_idx[0]:odom_idx[1],2], '-', color=colors["z"], lw=lw)
+#axs1[0].legend([r"$z_{ref}$", r"$z_{odom}$",r"$z_{mocap}$"], loc="lower center", prop={'size': text_size}, ncol=2, labelspacing=0.1, columnspacing=0.5)
+#axs1[0].grid()
+#axs1[0].set_ylabel("Height [m]", fontsize=text_size)
+#axs1[0].set_xlim([0, time[1]-time[0]])
 
-axs1[1].plot(t_ref[ref_idx[0]:ref_idx[1]], reference[ref_idx[0]:ref_idx[1],:2], '--', color="grey")
-axs1[1].plot(t_odom[odom_idx[0]:odom_idx[1]], odom[odom_idx[0]:odom_idx[1],:2], '-')
-axs1[1].legend([r"$x_{ref}$", r"$y_{ref}$",
+axs1[0].plot(t_ref[ref_idx[0]:ref_idx[1]] - t_ref[ref_idx[0]],
+             reference[ref_idx[0]:ref_idx[1],:2], '--', color="grey", lw=lw)
+axs1[0].plot(t_odom[odom_idx[0]:odom_idx[1]] - t_odom[odom_idx[0]],
+             odom[odom_idx[0]:odom_idx[1], 0], '-', color=colors["x"], lw=lw)
+axs1[0].plot(t_odom[odom_idx[0]:odom_idx[1]] - t_odom[odom_idx[0]],
+             odom[odom_idx[0]:odom_idx[1], 1], '-', color=colors["y"], lw=lw)
+axs1[0].legend([r"$x_{ref}$", r"$y_{ref}$",
                 r"$x$",r"$y$"], loc="lower left", prop={'size': text_size}, ncol=2, labelspacing=0.1, columnspacing=0.5)
-axs1[1].grid()
-axs1[1].set_ylabel("Position [m]")
-axs1[1].set_xlim(time)
+axs1[0].grid()
+axs1[0].set_ylabel("Position [m]", fontsize=text_size)
+axs1[0].set_xlim([0, time[1]-time[0]])
 
 q0 = odom_q[:,0]
 q1 = odom_q[:,1]
@@ -289,29 +297,32 @@ yaw = np.arctan2(
         q0**2 + q1**2 - q2**2 - q3**2
     )
 
-axs1[2].plot(t_ref[ref_idx[0]:ref_idx[1]], 180.0 / np.pi * reference_yaw[ref_idx[0]:ref_idx[1]], '--', color="grey")
-axs1[2].plot(t_odom[odom_idx[0]:odom_idx[1]], 180.0 / np.pi  * yaw[odom_idx[0]:odom_idx[1]], '-')
-axs1[2].plot(t_wall[wall_idx[0]:wall_idx[1]], 180.0 / np.pi * wall_yaw[wall_idx[0]:wall_idx[1]], '--')
-axs1[2].legend([r"$\psi_{ref}$", r"$\psi_{odom}$", r"$\psi_{Wall}$"], loc="upper left", prop={'size': text_size}, ncol=3, labelspacing=0.1, columnspacing=0.5)
-axs1[2].grid()
-axs1[2].set_xlabel("Time [s]")
-axs1[2].set_ylabel("Yaw [degree]")
-axs1[2].set_xlim(time)
+axs1[1].plot(t_ref[ref_idx[0]:ref_idx[1]] - t_ref[ref_idx[0]],
+             180.0 / np.pi * reference_yaw[ref_idx[0]:ref_idx[1]], '--', color="grey", lw=lw)
+axs1[1].plot(t_odom[odom_idx[0]:odom_idx[1]] - t_odom[odom_idx[0]],
+             180.0 / np.pi  * yaw[odom_idx[0]:odom_idx[1]], '-', color=colors["yaw"], lw=lw)
+axs1[1].plot(t_wall[wall_idx[0]:wall_idx[1]] - t_wall[wall_idx[0]],
+             180.0 / np.pi * np.ones_like(t_wall[wall_idx[0]:wall_idx[1]])*wall_angle, '--', color=colors["wall_yaw"], label= r"$\psi_{Wall}$", lw=lw)
+axs1[1].legend([r"$\psi_{ref}$", r"$\psi_{odom}$", r"$\psi_{Wall}$"], loc="upper left", prop={'size': text_size}, ncol=3, labelspacing=0.1, columnspacing=0.5)
+axs1[1].grid()
+axs1[1].set_xlabel("Time [s]", fontsize=text_size)
+axs1[1].set_ylabel(r"Yaw [$^\circ$]", fontsize=text_size)
+axs1[1].set_xlim([0, time[1]-time[0]])
 
 # Plot decision instances
 for i in decision_idx[1:]:
-    axs1[0].axvline(x = t_ee_reference[i], color = "grey")
-    axs1[1].axvline(x = t_ee_reference[i], color = "grey")
-    axs1[2].axvline(x = t_ee_reference[i], color = "grey")
+    #axs1[0].axvline(x = t_ee_reference[i] - t_ee_reference[ee_ref_idx[0]], color = "grey")
+    axs1[0].axvline(x = t_ee_reference[i] - t_ee_reference[ee_ref_idx[0]], color = "grey")
+    axs1[1].axvline(x = t_ee_reference[i] - t_ee_reference[ee_ref_idx[0]], color = "grey")
 
 ####################################################
 ############## GT Plot  ############################
 ####################################################
 fig2, axs2 = plt.subplots()
 axs2.set_aspect('equal')
-axs2.plot(odom[odom_idx[0]:odom_idx[1],0], odom[odom_idx[0]:odom_idx[1],1], label=r"$GT_{Base}$")
-axs2.plot(ee[joint_state_idx[0]:joint_state_idx[1],0], ee[joint_state_idx[0]:joint_state_idx[1],1], color="orange", label=r"$GT_{EE}$")
-axs2.scatter(ee_reference[ee_ref_idx[0]:ee_ref_idx[1], 0], ee_reference[ee_ref_idx[0]:ee_ref_idx[1], 1], marker="x", color="orange", label=r"$p_{EE,ref}$")
+axs2.plot(odom[odom_idx[0]:odom_idx[1], 0], odom[odom_idx[0]:odom_idx[1], 1], label=r"$GT_{Base}$", color=colors["base"], lw=lw)
+axs2.plot(ee[joint_state_idx[0]:joint_state_idx[1], 0], ee[joint_state_idx[0]:joint_state_idx[1], 1], color=colors["ee"], label=r"$GT_{EE}$", lw=lw)
+axs2.scatter(ee_reference[ee_ref_idx[0]:ee_ref_idx[1], 0], ee_reference[ee_ref_idx[0]:ee_ref_idx[1], 1], marker="x", color=colors["ee"], label=r"$p_{EE,ref}$")
 #axs2.scatter(reference[ref_idx[0]:ref_idx[1], 0], reference[ref_idx[0]:ref_idx[1], 1], marker="x", color="blue", label=r"$p_{ref}$")
 
 for i in decision_idx[1:]:
@@ -322,9 +333,9 @@ for i in decision_idx[1:]:
 
     axs2.arrow(ee[idx_js, 0], ee[idx_js, 1],
                arrow[0], arrow[1],
-               color="orange", linestyle=":", width = 0.01, label=r"$\psi_{EE}$")
+               color=colors["ee"], linestyle=":", width = 0.01, label=r"$\psi_{EE}$")
     axs2.arrow(ee[idx_js, 0], ee[idx_js, 1],
-            wrench_world[idx_wrench][0], wrench_world[idx_wrench][1], color="red",width=0.01, label=r"$f$")
+            wrench_world[idx_wrench][0], wrench_world[idx_wrench][1], color=colors["force"],width=0.01, label=r"$f$")
     
     projection = np.cross(wrench_world[idx_wrench],
                                 np.array([0,0,1]))
@@ -336,12 +347,12 @@ for i in decision_idx[1:]:
 
 axs2.add_patch(Polygon(np.array([[-wall_length, wall_fun(-wall_length)], [wall_length, wall_fun(wall_length)],
                                  [wall_length, 3], [-wall_length, 3],
-                                 ]), color='gray', alpha=0.4, label="Wall"))
+                                 ]), color='gray', alpha=1, label="Wall", zorder=0))
 
 
 axs2.grid()
-axs2.set_xlabel("x [m]")
-axs2.set_ylabel("y [m]")
+axs2.set_xlabel("x [m]", fontsize=text_size)
+axs2.set_ylabel("y [m]", fontsize=text_size)
 axs2.set_xlim([-2.2, 0.5])
 axs2.set_ylim([-0.75, 2.5])
 
@@ -356,32 +367,38 @@ axs2.legend(by_label.values(), by_label.keys(), loc="lower left", prop={'size': 
 fig3, axs3 = plt.subplots()
 axs3.plot(t_wrench[wrench_idx[0]:wrench_idx[1]], wrench[wrench_idx[0]:wrench_idx[1],:])
 axs3.grid()
-axs3.set_xlabel("Time [s]")
-axs3.set_ylabel("Force")
+axs3.set_xlabel("Time [s]", fontsize=text_size)
+axs3.set_ylabel("Force", fontsize=text_size)
 axs3.legend([r"$f_x$",r"$f_y$",r"$f_z$"],
             labelspacing=0.1, columnspacing=0.5)
-axs3.set_xlim(time)
+axs3.set_xlim([0, time[1]-time[0]])
 
 ####################################################
 ############## EE Position and Reference ###########
 ####################################################
-fig4, axs4 = plt.subplots(3, sharex="all")
-axs4[0].plot(t_ee_reference[ee_ref_idx[0]:ee_ref_idx[1]], ee_reference[ee_ref_idx[0]:ee_ref_idx[1],2], '--', color="grey")
-axs4[0].plot(t_joint_state[joint_state_idx[0]:joint_state_idx[1]], ee[joint_state_idx[0]:joint_state_idx[1],2], '-')
-axs4[0].legend([r"$z_{EE,ref}$", r"$z_{EE,odom}$"], loc="lower center", prop={'size': text_size}, ncol=2, labelspacing=0.1, columnspacing=0.5)
-axs4[0].grid()
-axs4[0].set_ylabel("Height [m]")
-axs4[0].set_xlim(time)
+fig4, axs4 = plt.subplots(2, sharex="all")
+#axs4[0].plot(t_ee_reference[ee_ref_idx[0]:ee_ref_idx[1]] - t_ee_reference[ee_ref_idx[0]],
+#             ee_reference[ee_ref_idx[0]:ee_ref_idx[1],2], '--', color="grey", lw=lw)
+#axs4[0].plot(t_joint_state[joint_state_idx[0]:joint_state_idx[1]] - t_joint_state[joint_state_idx[0]],
+#             ee[joint_state_idx[0]:joint_state_idx[1],2], '-', color=colors["z"], lw=lw)
+#axs4[0].legend([r"$z_{EE,ref}$", r"$z_{EE,odom}$"], loc="lower center", prop={'size': text_size}, ncol=2, labelspacing=0.1, columnspacing=0.5)
+#axs4[0].grid()
+#axs4[0].set_ylabel("Height [m]", fontsize=text_size)
+#axs4[0].set_xlim([0, time[1]-time[0]])
 
-axs4[1].plot(t_ee_reference[ee_ref_idx[0]:ee_ref_idx[1]], ee_reference[ee_ref_idx[0]:ee_ref_idx[1],:2], '--', color="grey")
-axs4[1].plot(t_joint_state[joint_state_idx[0]:joint_state_idx[1]], ee[joint_state_idx[0]:joint_state_idx[1],:2], '-')
-axs4[1].legend([r"$x_{EE,ref}$", r"$y_{EE,ref}$",
+axs4[0].plot(t_ee_reference[ee_ref_idx[0]:ee_ref_idx[1]] - t_ee_reference[ee_ref_idx[0]],
+             ee_reference[ee_ref_idx[0]:ee_ref_idx[1],:2], '--', color="grey", lw=lw)
+axs4[0].plot(t_joint_state[joint_state_idx[0]:joint_state_idx[1]] - t_joint_state[joint_state_idx[0]],
+             ee[joint_state_idx[0]:joint_state_idx[1], 0], '-', color=colors["x"], lw=lw)
+axs4[0].plot(t_joint_state[joint_state_idx[0]:joint_state_idx[1]] - t_joint_state[joint_state_idx[0]],
+             ee[joint_state_idx[0]:joint_state_idx[1], 1], '-', color=colors["y"], lw=lw)
+axs4[0].legend([r"$x_{EE,ref}$", r"$y_{EE,ref}$",
                 r"$x_{EE}$",r"$y_{EE}$"],
                 loc="lower left", prop={'size': text_size}, ncol=2,
                 labelspacing=0.1, columnspacing=0.5)
-axs4[1].grid()
-axs4[1].set_ylabel("Position [m]")
-axs4[1].set_xlim(time)
+axs4[0].grid()
+axs4[0].set_ylabel("Position [m]", fontsize=text_size)
+axs4[0].set_xlim([0, time[1]-time[0]])
 
 
 q0_ref = ee_reference_q[:,0]
@@ -394,15 +411,18 @@ ee_yaw_ref = np.arctan2(
     )
 
 
-axs4[2].plot(t_ee_reference[ee_ref_idx[0]:ee_ref_idx[1]], 180.0 / np.pi  * ee_yaw_ref[ee_ref_idx[0]:ee_ref_idx[1]], '--', color="grey")
-axs4[2].plot(t_odom[odom_idx[0]:odom_idx[1]], 180.0 / np.pi  * yaw[odom_idx[0]:odom_idx[1]], '-')
-axs4[2].plot(t_wall[wall_idx[0]:wall_idx[1]], 180.0 / np.pi * wall_yaw[wall_idx[0]:wall_idx[1]], '--')
-axs4[2].legend([r"$\psi_{EE,ref}$", r"$\psi_{EE}$", r"$\psi_{Wall}$"], loc="upper left", prop={'size': text_size}, ncol=3,
+axs4[1].plot(t_ee_reference[ee_ref_idx[0]:ee_ref_idx[1]] - t_ee_reference[ee_ref_idx[0]],
+             180.0 / np.pi  * ee_yaw_ref[ee_ref_idx[0]:ee_ref_idx[1]], '--', color="grey", label=r"$\psi_{EE,ref}$", lw=lw)
+axs4[1].plot(t_wall[wall_idx[0]:wall_idx[1]] - t_wall[wall_idx[0]],
+             180.0 / np.pi * np.ones_like(t_wall[wall_idx[0]:wall_idx[1]])*wall_angle, '--', color=colors["wall_yaw"], label= r"$\psi_{Wall}$", lw=lw)
+axs4[1].plot(t_odom[odom_idx[0]:odom_idx[1]] - t_odom[odom_idx[0]],
+             180.0 / np.pi  * yaw[odom_idx[0]:odom_idx[1]], '-', color=colors["yaw"], label=r"$\psi_{EE}$", lw=lw)
+axs4[1].legend(loc="upper left", prop={'size': text_size}, ncol=3,
                 labelspacing=0.1, columnspacing=0.5)
-axs4[2].grid()
-axs4[2].set_xlabel("Time [s]")
-axs4[2].set_ylabel("Yaw [degree]")
-axs4[2].set_xlim(time)
+axs4[1].grid()
+axs4[1].set_xlabel("Time [s]", fontsize=text_size)
+axs4[1].set_ylabel(r"Yaw [$^\circ$]", fontsize=text_size)
+axs4[1].set_xlim([0, time[1]-time[0]])
 
 #plt.show()
 
