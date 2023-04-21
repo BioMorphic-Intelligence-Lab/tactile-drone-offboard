@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon
+from matplotlib.patches import (Polygon, Arc)
+from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 import matplotlib.patheffects as pe
 from pathlib import Path
 
@@ -12,6 +13,8 @@ from plotting_settings import *
 
 from robot import fk
 from robot import rot_z
+
+from angle_annotation import AngleAnnotation
 
 # Function for guessing ros message tupe
 def guess_msgtype(path: Path) -> str:
@@ -61,7 +64,7 @@ def draw_error_band(ax, x, y, err, **kwargs):
 add_types = {}
 
 for pathstr in [
-    '/home/anton/Desktop/px4_ros_com_ros2/src/px4_msgs/msg/VehicleOdometry.msg'
+    '/home/anton/Desktop/cloned_software/px4_ros_com_ros2/src/px4_msgs/msg/VehicleOdometry.msg'
 ]:
     msgpath = Path(pathstr)
     msgdef = msgpath.read_text(encoding='utf-8')
@@ -72,10 +75,16 @@ register_types(add_types)
 
 
 # The time interval we want to plot
-times = [(13, 40), (30, 52.5),(12.5, 38),(15, 35),(12.5, 42.5)]
+times = [(18.5, 41)]
 
 # Angled Away Times
 # [(23, 44), (17.5, 42.5), (15, 38.75), (12.5, 38.5), (10, 47.5)]
+
+# Bigger Angled Away Times
+# [(23, 44), (17.5, 42.5), (15, 38.75)]
+
+# Even Bigger Angled Away Times
+# [(23, 44)]
 
 # Angled Towards Times
 # [(13, 40), (30, 52.5),(12.5, 38),(15, 35),(12.5, 42.5)]
@@ -84,11 +93,7 @@ times = [(13, 40), (30, 52.5),(12.5, 38),(15, 35),(12.5, 42.5)]
 # [(15, 42.5), (15, 45), (15, 47), (15, 42.5), (15, 43), (15, 39), (15, 38)]
 
 # File path to rosbag
-paths = ['/home/anton/Desktop/rosbags/2023_04_05/angled_towards/rosbag2-20_48_20-success1',
-         '/home/anton/Desktop/rosbags/2023_04_05/angled_towards/rosbag2-20_54_53-success2',
-         '/home/anton/Desktop/rosbags/2023_04_05/angled_towards/rosbag2-20_59_21-success3',
-         '/home/anton/Desktop/rosbags/2023_04_05/angled_towards/rosbag2-21_49_35-success4',
-         '/home/anton/Desktop/rosbags/2023_04_05/angled_towards/rosbag2-21_52_07-success5']
+paths = ['/home/anton/Desktop/rosbags/2023_04_06/angled_away/rosbag2-09_09_00-success9']
 
 #Angled Away Path
 # ['/home/anton/Desktop/rosbags/2023_04_05/angled_away/rosbag2-21_54_24-success1',
@@ -97,6 +102,13 @@ paths = ['/home/anton/Desktop/rosbags/2023_04_05/angled_towards/rosbag2-20_48_20
 #         '/home/anton/Desktop/rosbags/2023_04_06/angled_away/rosbag2-07_46_04-success4',
 #         '/home/anton/Desktop/rosbags/2023_04_06/angled_away/rosbag2-07_48_58-success5']
 
+# Bigger Angled Away Path
+# ['/home/anton/Desktop/rosbags/2023_04_06/angled_away/rosbag2-07_51_50-success6-bigger-angle',
+#         '/home/anton/Desktop/rosbags/2023_04_06/angled_away/rosbag2-07_56_10-success7',
+#         '/home/anton/Desktop/rosbags/2023_04_06/angled_away/rosbag2-07_59_51-success8']
+
+# Even Bigger Angled Away Path
+# ['/home/anton/Desktop/rosbags/2023_04_06/angled_away/rosbag2-09_09_00-success9']
 
 # Angled Towards Path
 # ['/home/anton/Desktop/rosbags/2023_04_05/angled_towards/rosbag2-20_48_20-success1',
@@ -135,12 +147,25 @@ fig_t, axs_t = plt.subplots(3)
 ####################################################
 fig, axs = plt.subplots()
 axs.set_aspect('equal')
+axs.tick_params(axis='both', which='major', labelsize=0.8*text_size)
+axs.xaxis.set_major_locator(MultipleLocator(1))
+axs.xaxis.set_major_formatter('{x:.0f}')
+axs.xaxis.set_minor_locator(MultipleLocator(0.2))
 
-axs.grid()
-axs.set_xlabel("x [m]", fontsize=text_size)
-axs.set_ylabel("y [m]", fontsize=text_size)
-axs.set_xlim([-2.2, 0.5])
-axs.set_ylim([-0.75, 2.5])
+axs.yaxis.set_major_locator(MultipleLocator(1))
+axs.yaxis.set_major_formatter('{x:.0f}')
+axs.yaxis.set_minor_locator(MultipleLocator(0.2))
+
+axs.spines['top'].set_visible(False)
+axs.spines['right'].set_visible(False)
+axs.spines['bottom'].set_visible(False)
+axs.spines['left'].set_visible(False)
+
+axs.set_xlabel("x[m]",fontsize=text_size)
+axs.set_ylabel("y[m]",fontsize=text_size)
+axs.set_xlim([-2.25, 0.5])
+axs.set_ylim([-0.25, 3])
+#axs.set_facecolor('xkcd:light grey')
 
 ##############################################################
 ############## Load all the data #############################
@@ -272,7 +297,7 @@ for idx, path in enumerate(paths[:6]):
     #############################################################
     ################ Wall Patch Definition ######################
     #############################################################
-    wall_pos = np.mean(wall, axis=0)
+    wall_pos =  [1.78, 0] # np.mean(wall, axis=0) #[1.66, 0]
     y_diff = wall_pos[0] - 1.5
     wall_pos[0] -= y_diff
     q0_wall = wall_q[:,0]
@@ -293,13 +318,36 @@ for idx, path in enumerate(paths[:6]):
 
     # Only add the first wall
     if idx == 0: 
-        #wall_angle = 0
-        axs.add_patch(Polygon(np.array([[-wall_length, wall_fun(-wall_length)],
-                                        [wall_length, wall_fun(wall_length)],
-                                        [wall_length, 3], [-wall_length, 3],
-                                       ]),
-                              color='gray', alpha=1, label='_nolegend_',
-                              zorder=0))
+        wall_angle = -26.8 * np.pi/180
+        top_wall_vec=np.array([0.0, 0.25])
+        rot = np.array([[np.cos(wall_angle), -np.sin(wall_angle)],
+                        [np.sin(wall_angle),  np.cos(wall_angle)]])
+        top_wall_vec = rot @ top_wall_vec
+
+        wall_bottom_left = np.array([-wall_length, wall_fun(-wall_length)])
+        wall_bottom_right = np.array([0.25, wall_fun(0.25)])
+        wall_top_right = wall_bottom_right + top_wall_vec
+        wall_top_left = wall_bottom_left + top_wall_vec
+        corners = np.stack((wall_bottom_left, wall_bottom_right,
+                            wall_top_right, wall_top_left))
+        axs.add_patch(Polygon(corners,
+                              facecolor='xkcd:light grey', edgecolor='black', alpha=1, label='_nolegend_',
+                              zorder=1))
+        upper_bound = max(wall_fun(-wall_length), wall_fun(0.25)) + 0.25
+        axs.plot(np.linspace(-10,10,2), np.ones(2) * upper_bound, color='black', lw=0.8*lw, linestyle='--', zorder=0)
+       
+        wall_str = "{Wall}"
+        angle_points = np.array([[-wall_length, -1, -1], [wall_fun(-wall_length) + 0.25, wall_fun(-1) + 0.25, upper_bound]])
+
+        AngleAnnotation(xy=angle_points[:,0],
+                        p1=angle_points[:,1],
+                        p2=angle_points[:,2],
+                        ax=axs,
+                        size=2000,
+                        lw=0.8*lw,
+                        linestyle=":")
+        text_position = np.mean(angle_points[:,1:],axis=1)
+        axs.annotate(rf"$\psi_{wall_str} = {180/np.pi * wall_angle:.1f}^\circ$", text_position, fontsize=0.8*text_size)
 
 
     # Transform such that all walls are at the same spot
@@ -354,12 +402,12 @@ draw_error_band(axs_t[2], t_mean, mean[:,2], std[:,2], facecolor="orange", alpha
 
 axs.plot(mean[:, 0], mean[:,1], color=colors["ee"], label=r"$\mu_{EE}$", path_effects=[pe.Stroke(linewidth=lw, foreground='black'), pe.Normal()], zorder=21)
 
-forward = np.concatenate(([[1, 0]], np.diff(mean[:,:2], axis=0)), axis=0)
-err = [get_normal_error(std[i, :], forward[i,:]) for i in range(len(std))]
-draw_error_band(axs, mean[:, 0], mean[:,1], err, facecolor=colors["ee"], edgecolor="none", alpha=.5, zorder=15, label=r"$\sigma_{EE}$")
+#forward = np.concatenate(([[1, 0]], np.diff(mean[:,:2], axis=0)), axis=0)
+#err = [get_normal_error(std[i, :], forward[i,:]) for i in range(len(std))]
+#draw_error_band(axs, mean[:, 0], mean[:,1], err, facecolor=colors["ee"], edgecolor="none", alpha=.5, zorder=15, label=r"$\sigma_{EE}$")
 
 # Set Legend
-axs.legend(loc="lower left", prop={'size': text_size}, ncol=2, labelspacing=0.1, columnspacing=0.5)
+axs.legend(loc="lower left", prop={'size': text_size}, ncol=1, labelspacing=0.1, columnspacing=0.5)
 
 axs_t[0].legend()
 axs_t[1].legend()
