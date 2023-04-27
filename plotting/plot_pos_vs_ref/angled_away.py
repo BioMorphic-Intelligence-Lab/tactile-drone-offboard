@@ -376,7 +376,7 @@ fig4, axs4 = plt.subplots(2, sharex="all")
 for i in range(2):
     axs4[i].spines['top'].set_visible(False)
     axs4[i].spines['right'].set_visible(False)
-    axs4[i].spines['bottom'].set_visible(False)
+    #axs4[i].spines['bottom'].set_visible(False)
     #axs4[i].spines['left'].set_visible(False)
     axs4[i].xaxis.set_major_locator(MultipleLocator(10))
     axs4[i].xaxis.set_major_formatter('{x:.0f}')
