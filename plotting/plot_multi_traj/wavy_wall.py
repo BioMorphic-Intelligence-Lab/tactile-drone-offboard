@@ -284,7 +284,7 @@ for idx, path in enumerate(paths[:6]):
 
     # Only add the first wall
     if idx == 0: 
-        wall_angle = -0.0 * np.pi/180
+        wall_angle = 0.0 * np.pi/180
         d = 0.25
         l = 1.9
         off = 0.3
@@ -312,23 +312,31 @@ for idx, path in enumerate(paths[:6]):
         axs.add_patch(Polygon(corners,
                               facecolor='xkcd:light grey', edgecolor='black', alpha=1, label='_nolegend_',
                               zorder=1))
-        upper_bound = max(corners[:,1])
-        axs.plot(np.linspace(-10,10,2), np.ones(2) * upper_bound, color='black', lw=0.8*lw, linestyle='--', zorder=0)
+
+        axs.plot([corners[0,0], corners[3,0]],
+                 [corners[0,1], corners[3,1]], color='black', lw=0.8*lw, linestyle='--', zorder=3)
        
         wall_str = "{\\mathrm{Wall}}"
-        #angle_points = np.stack((wall_top_left,
-        #                         wall_top_right,
-        #                         wall_top_left + np.array([.1, 0])))
 
-        #AngleAnnotation(xy=angle_points[0,:],
-        #               p1=angle_points[1,:],
-        #                p2=angle_points[2,:],
-         #               ax=axs,
-         #               size=2000,
-        #                lw=0.8*lw,
-        #                linestyle=":")
-        #text_position = np.mean(angle_points[1:,:],axis=0) + np.array([-.25, 0.075])
-        #axs.annotate(rf"$\psi_{wall_str} = {180/np.pi * wall_angle:.1f}^\circ$", text_position, fontsize=0.8*text_size)
+        AngleAnnotation(xy=corners[-1],
+                        p1=corners[-2],
+                        p2=corners[-4],
+                        ax=axs,
+                        size=420,
+                        lw=0.8*lw,
+                        linestyle=":")
+        text_position = corners[-1] + np.array([0.05, 0.05])
+        axs.annotate(rf"${180/np.pi * np.arctan2(-d_b,a):.1f}^\circ$", text_position, fontsize=0.8*text_size)
+
+        AngleAnnotation(xy=corners[4],
+                        p1=corners[7],
+                        p2=corners[5],
+                        ax=axs,
+                        size=420,
+                        lw=0.8*lw,
+                        linestyle=":")
+        text_position = corners[4] + np.array([-0.15, 0.05])
+        axs.annotate(rf"${180/np.pi * np.arctan2(d_b, a):.1f}^\circ$", text_position, fontsize=0.8*text_size)
 
 
     # Transform such that all walls are at the same spot
@@ -344,7 +352,7 @@ for idx, path in enumerate(paths[:6]):
     ###########################################################
     ############# Plot the current data #######################
     ###########################################################
-    axs.plot(ee[:, 0], ee[:, 1], color="black", alpha=0.4, zorder=20, lw=lw)
+    #axs.plot(ee[:, 0], ee[:, 1], color="black", alpha=0.4, zorder=20, lw=lw)
 
     ###########################################################
     axs_t[0].plot(t_ee, ee[:, 0], color="grey")
