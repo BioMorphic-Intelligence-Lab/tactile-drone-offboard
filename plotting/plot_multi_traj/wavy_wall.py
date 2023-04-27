@@ -313,8 +313,11 @@ for idx, path in enumerate(paths[:6]):
                               facecolor='xkcd:light grey', edgecolor='black', alpha=1, label='_nolegend_',
                               zorder=1))
 
-        axs.plot([corners[0,0], corners[3,0]],
-                 [corners[0,1], corners[3,1]], color='black', lw=0.8*lw, linestyle='--', zorder=3)
+        axs.plot([corners[-1,0], corners[-4,0]],
+                 [corners[-1,1], corners[-4,1]], color='black', lw=0.8*lw, linestyle='--', zorder=3)
+        axs.plot([corners[4,0], corners[7,0]],
+                 [corners[4,1], corners[7,1]], color='black', lw=0.8*lw, linestyle='--', zorder=3)
+        
        
         wall_str = "{\\mathrm{Wall}}"
 
@@ -323,7 +326,7 @@ for idx, path in enumerate(paths[:6]):
                         p2=corners[-4],
                         ax=axs,
                         size=420,
-                        lw=0.8*lw,
+                        lw=0.5*lw,
                         linestyle=":")
         text_position = corners[-1] + np.array([0.05, 0.05])
         axs.annotate(rf"${180/np.pi * np.arctan2(-d_b,a):.1f}^\circ$", text_position, fontsize=0.8*text_size)
@@ -352,7 +355,7 @@ for idx, path in enumerate(paths[:6]):
     ###########################################################
     ############# Plot the current data #######################
     ###########################################################
-    #axs.plot(ee[:, 0], ee[:, 1], color="black", alpha=0.4, zorder=20, lw=lw)
+    axs.plot(ee[:, 0], ee[:, 1], color="black", alpha=0.4, zorder=20, lw=lw)
 
     ###########################################################
     axs_t[0].plot(t_ee, ee[:, 0], color="grey")
