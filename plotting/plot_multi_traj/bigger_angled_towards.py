@@ -364,11 +364,11 @@ draw_error_band(axs_t[0], t_mean, mean[:,0], std[:,0], facecolor="orange", alpha
 draw_error_band(axs_t[1], t_mean, mean[:,1], std[:,1], facecolor="orange", alpha=.3,label=r"$\sigma_x$")
 draw_error_band(axs_t[2], t_mean, mean[:,2], std[:,2], facecolor="orange", alpha=.3,label=r"$\sigma_x$")
 
-axs.plot(mean[:, 0], mean[:,1], color=colors["ee"], label=r"$\mu_{EE}$", lw=lw, zorder=21)
+axs.plot(mean[:-5, 0], mean[:-5,1], color=colors["ee"], label=r"$\mu_{EE}$", lw=lw, zorder=21)
 
 forward = np.concatenate(([[1, 0]], np.diff(mean[:,:2], axis=0)), axis=0)
 err = [get_normal_error(std[i, :], forward[i,:]) for i in range(len(std))]
-draw_error_band(axs, mean[:, 0], mean[:,1], err, facecolor=colors["ee"], edgecolor="none", alpha=.3, zorder=15, label=r"$\sigma_{EE}$")
+draw_error_band(axs, mean[:-5, 0], mean[:-5,1], err[:-5], facecolor=colors["ee"], edgecolor="none", alpha=.3, zorder=15, label=r"$\sigma_{EE}$")
 
 # Set Legend
 axs.legend(loc="lower left", prop={'size': text_size}, ncol=1, labelspacing=0.1, columnspacing=0.5)

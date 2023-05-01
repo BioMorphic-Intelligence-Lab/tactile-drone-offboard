@@ -112,7 +112,7 @@ t_ee_col = []
 fig = plt.figure()
 axs = plt.axes(projection='3d')
 
-axs.set_xlim([-2, 0.5])
+axs.set_xlim([-2.4, 0.2])
 axs.set_ylim([-0.1, 2])
 axs.set_zlim([0.0, 2.5])
 
@@ -134,7 +134,7 @@ axs.zaxis.set_major_formatter('{x:.0f}')
 axs.zaxis.set_minor_locator(MultipleLocator(0.5))
 
 fig2, ax2 = plt.subplots()
-ax2.set_xlim([-2.4, 0.5])
+ax2.set_xlim([-2.4, 0.2])
 ax2.set_ylim([1.2, 2.0])
 
 ax2.set_xlabel("x[m]",fontsize=text_size)
@@ -153,19 +153,6 @@ ax2.set_aspect('equal')
 
 
 fig3, ax3 = plt.subplots()
-ax3.set_xlabel("x[m]",fontsize=text_size)
-ax3.set_ylabel("z[m]",fontsize=text_size)
-
-ax3.tick_params(axis='both', which='major', labelsize=0.8*text_size)
-ax3.xaxis.set_major_locator(MultipleLocator(1))
-ax3.xaxis.set_major_formatter('{x:.0f}')
-ax3.xaxis.set_minor_locator(MultipleLocator(0.2))
-
-ax3.yaxis.set_major_locator(MultipleLocator(1))
-ax3.yaxis.set_major_formatter('{x:.0f}')
-ax3.yaxis.set_minor_locator(MultipleLocator(0.2))
-
-
 ax3.set_xlim([0.0, 30.0])
 ax3.set_ylim([1.4,1.8])
 
@@ -177,9 +164,11 @@ ax3.xaxis.set_major_locator(MultipleLocator(10))
 ax3.xaxis.set_major_formatter('{x:.0f}')
 ax3.xaxis.set_minor_locator(MultipleLocator(1))
 
-ax3.yaxis.set_major_locator(MultipleLocator(1))
-ax3.yaxis.set_major_formatter('{x:.0f}')
-ax3.yaxis.set_minor_locator(MultipleLocator(0.2))
+#ax3.yaxis.set_major_locator(MultipleLocator(1))
+#ax3.yaxis.set_major_formatter('{x:.0f}')
+#ax3.yaxis.set_minor_locator(MultipleLocator(0.2))
+y_ticks = [1.5,1.7]
+ax3.set_yticks(y_ticks)
 
 
 ##############################################################
@@ -330,9 +319,9 @@ for idx, path in enumerate(paths[:6]):
         axs.plot3D([-2,0.4],[1.5,1.5],[1.7,1.7], color="black",linestyle="--", lw=0.5*lw)
         axs.plot3D([-2,0.4],[1.5,1.5],[1.5,1.5], color="black",linestyle="--", lw=0.5*lw)
 
-        ax2.add_patch(Polygon(([-2,1.3], [-2,1.9], [0.4,1.9], [0.4,1.3]), facecolor='xkcd:light grey', edgecolor="black", lw=1.2*lw, alpha=1))
-        ax2.plot([-2,0.4],[1.7,1.7], color="black",linestyle="--", lw=0.7*lw)
-        ax2.plot([-2,0.4],[1.5,1.5], color="black",linestyle="--", lw=0.7*lw)
+        ax2.add_patch(Polygon(([-2,1.3], [-2,1.9], [0.1,1.9], [0.1,1.3]), facecolor='xkcd:light grey', edgecolor="black", lw=1.2*lw, alpha=1))
+        ax2.plot([-2,0.1],[1.7,1.7], color="black",linestyle="--", lw=0.7*lw)
+        ax2.plot([-2,0.1],[1.5,1.5], color="black",linestyle="--", lw=0.7*lw)
 
         ax3.plot([0,30],[1.7,1.7], color="black",linestyle="--", lw=0.7*lw)
         ax3.plot([0,30],[1.5,1.5], color="black",linestyle="--", lw=0.7*lw)
