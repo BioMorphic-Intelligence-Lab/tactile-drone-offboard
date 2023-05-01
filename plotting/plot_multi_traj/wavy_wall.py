@@ -77,16 +77,24 @@ register_types(add_types)
 
 
 # The time interval we want to plot
-times = [(15, 42.5), (15, 45), (15, 47), (15, 42.5), (15, 43), (15, 39), (15, 38)]
+times = [(15, 45),
+         (15, 43),
+         (15, 44),
+         (15, 50),
+         (15, 44),
+         (15, 50),
+         (20, 50)
+         ]
 
 # File path to rosbag
-paths = ['/home/anton/Desktop/rosbags/2023_04_05/straight_wall/rosbag2-18_59_27-success1-alpha02',
-         '/home/anton/Desktop/rosbags/2023_04_05/straight_wall/rosbag2-19_45_11-success2',
-         '/home/anton/Desktop/rosbags/2023_04_05/straight_wall/rosbag2-20_41_33-success-4',
-         '/home/anton/Desktop/rosbags/2023_04_05/straight_wall/rosbag2-20_44_41-success5',
-         '/home/anton/Desktop/rosbags/2023_04_06/straight_wall/rosbag2-09_12_22-success1',
-         '/home/anton/Desktop/rosbags/2023_04_06/straight_wall/rosbag2-09_17_48-success2',
-         '/home/anton/Desktop/rosbags/2023_04_06/straight_wall/rosbag2-09_22_41-success3']
+paths = ['/home/anton/Desktop/rosbags/2023_04_28/wavy_surface/rosbag2-11_43_42-success2',
+         '/home/anton/Desktop/rosbags/2023_04_28/wavy_surface/rosbag2-11_52_34-success3',
+         '/home/anton/Desktop/rosbags/2023_04_28/wavy_surface/rosbag2-16_53_32-success5',
+         '/home/anton/Desktop/rosbags/2023_04_28/wavy_surface/rosbag2-17_01_14-success6',
+         '/home/anton/Desktop/rosbags/2023_04_28/wavy_surface/rosbag2-17_04_53-success7',
+         '/home/anton/Desktop/rosbags/2023_04_28/wavy_surface/rosbag2-17_09_21-success8',
+         '/home/anton/Desktop/rosbags/2023_04_28/wavy_surface/rosbag2-17_23_12-success9'
+         ]
 
 # Topics to collect data from
 topics=['/fmu/out/vehicle_odometry',
@@ -123,8 +131,8 @@ axs.spines['right'].set_visible(False)
 
 axs.set_xlabel("x[m]",fontsize=text_size)
 axs.set_ylabel("y[m]",fontsize=text_size)
-axs.set_xlim([-2, 0.5])
-axs.set_ylim([-0.1, 2])
+axs.set_xlim([-2.4, 0.2])
+axs.set_ylim([-0.4, 1.8])
 #axs.set_facecolor('xkcd:light grey')
 
 ##############################################################
@@ -132,7 +140,7 @@ axs.set_ylim([-0.1, 2])
 ##############################################################
 
 # create reader instance and open for reading
-for idx, path in enumerate(paths[:6]):
+for idx, path in enumerate(paths):
     with Reader(path) as reader:
 
         # Init the arrays for plotting
@@ -269,7 +277,7 @@ for idx, path in enumerate(paths[:6]):
             q0_wall**2 + q1_wall**2 - q2_wall**2 - q3_wall**2
         )
 
-    wall_angle = np.mean(wall_yaw)
+    wall_angle = np.mean(wall_yaw) + np.pi/2
 
 
     ##############################################
@@ -278,45 +286,49 @@ for idx, path in enumerate(paths[:6]):
     #               ________________             #
     #               |__    __    __| d           #
     #                  \__/  \__/    d_b         #
-    #               off   a    b                 #
+    #              off2   a mid b off1            #
     #                                            #
     ##############################################
 
     # Only add the first wall
     if idx == 0: 
-        wall_angle = 0.0 * np.pi/180
+        #wall_angle = 0.0 * np.pi/180
         d = 0.25
-        l = 1.9
-        off = 0.3
-        a = 0.2
-        b = 0.1
-        d_b = 0.1
-        assert(l == 3*off + 4*a + 2*b)
-        
+        l = 2.4
+        off1 = 0.15
+        off2 = 0.29
+        mid = 0.4
+        a = 0.35
+        b = 0.08
+        d_b1 = 0.09
+        d_b2 = 0.09
+        print(off1 + off2 + mid + 4*a + 2*b)
+        assert(np.abs(l - (off1 + off2 + mid + 4*a + 2*b)) < 0.001)
+
         corners = np.stack(([-l, 0],
-                           [-l, d],
-                           [0, d],
-                           [0, 0],
-                           [-off, 0],
-                           [-off-a, -d_b],
-                           [-off-a-b, -d_b],
-                           [-off-2*a-b, 0],
-                           [-2*off-2*a-b, 0],
-                           [-2*off-3*a-b, -d_b],
-                           [-2*off-3*a-2*b, -d_b],
-                           [-2*off-4*a-2*b, 0.0]
-                          ))
+                            [-l, d],
+                            [0, d],
+                            [0, 0],
+                            [-off1, 0],
+                            [-off1-a, -d_b1],
+                            [-off1-a-b, -d_b1],
+                            [-off1-2*a-b, 0],
+                            [-off1-2*a-b-mid, 0],
+                            [-off1-3*a-b-mid, -d_b2],
+                            [-off1-3*a-2*b-mid, -d_b2],
+                            [-off1-4*a-2*b-mid, 0.0]
+                            ))
         rot = np.array([[np.cos(wall_angle), -np.sin(wall_angle)],
                         [np.sin(wall_angle),  np.cos(wall_angle)]])
         corners = np.array([rot @ corners[i,:] for i in range(len(corners))]) + np.array([0.1, wall_pos[0]])
         axs.add_patch(Polygon(corners,
-                              facecolor='xkcd:light grey', edgecolor='black', alpha=1, label='_nolegend_',
+                              facecolor='xkcd:light grey', edgecolor='black', alpha=1, label='_nolegend_', lw=1.2*lw,
                               zorder=1))
 
         axs.plot([corners[-1,0], corners[-4,0]],
-                 [corners[-1,1], corners[-4,1]], color='black', lw=0.8*lw, linestyle='--', zorder=3)
+                 [corners[-1,1], corners[-4,1]], color='black', lw=0.1*lw, linestyle='--', zorder=3)
         axs.plot([corners[4,0], corners[7,0]],
-                 [corners[4,1], corners[7,1]], color='black', lw=0.8*lw, linestyle='--', zorder=3)
+                 [corners[4,1], corners[7,1]], color='black', lw=0.1*lw, linestyle='--', zorder=3)
         
        
         wall_str = "{\\mathrm{Wall}}"
@@ -328,18 +340,18 @@ for idx, path in enumerate(paths[:6]):
                         size=420,
                         lw=0.5*lw,
                         linestyle=":")
-        text_position = corners[-1] + np.array([0.05, 0.05])
-        axs.annotate(rf"${180/np.pi * np.arctan2(-d_b,a):.1f}^\circ$", text_position, fontsize=0.8*text_size)
+        text_position = corners[-1] + np.array([0.05, 0.15])
+        axs.annotate(rf"${180/np.pi * np.arctan2(-d_b2,a):.1f}^\circ$", text_position, fontsize=0.8*text_size)
 
         AngleAnnotation(xy=corners[4],
                         p1=corners[7],
                         p2=corners[5],
                         ax=axs,
                         size=420,
-                        lw=0.8*lw,
+                        lw=0.5*lw,
                         linestyle=":")
-        text_position = corners[4] + np.array([-0.15, 0.05])
-        axs.annotate(rf"${180/np.pi * np.arctan2(d_b, a):.1f}^\circ$", text_position, fontsize=0.8*text_size)
+        text_position = corners[4] + np.array([-0.2, 0.15])
+        axs.annotate(rf"${180/np.pi * np.arctan2(d_b1, a):.1f}^\circ$", text_position, fontsize=0.8*text_size)
 
 
     # Transform such that all walls are at the same spot
@@ -355,12 +367,12 @@ for idx, path in enumerate(paths[:6]):
     ###########################################################
     ############# Plot the current data #######################
     ###########################################################
-    axs.plot(ee[:, 0], ee[:, 1], color="black", alpha=0.4, zorder=20, lw=lw)
+    axs.plot(ee[:, 0], ee[:, 1], color="black", alpha=0.2, zorder=10, lw=0.7*lw)
 
     ###########################################################
-    axs_t[0].plot(t_ee, ee[:, 0], color="grey")
-    axs_t[1].plot(t_ee, ee[:, 1], color="grey")
-    axs_t[2].plot(t_ee, ee[:, 2], color="grey")
+    axs_t[0].plot(t_ee, ee[:, 0], label=f"{idx + 1}")
+    axs_t[1].plot(t_ee, ee[:, 1], label=f"{idx + 1}")
+    axs_t[2].plot(t_ee, ee[:, 2], label=f"{idx + 1}")
 
 
 ####################################################
@@ -392,11 +404,12 @@ draw_error_band(axs_t[0], t_mean, mean[:,0], std[:,0], facecolor="orange", alpha
 draw_error_band(axs_t[1], t_mean, mean[:,1], std[:,1], facecolor="orange", alpha=.3,label=r"$\sigma_x$")
 draw_error_band(axs_t[2], t_mean, mean[:,2], std[:,2], facecolor="orange", alpha=.3,label=r"$\sigma_x$")
 
-axs.plot(mean[:, 0], mean[:,1], color=colors["ee"], label=r"$\mu_{EE}$", path_effects=[pe.Stroke(linewidth=lw, foreground='black'), pe.Normal()], zorder=21)
+axs.plot(mean[:, 0], mean[:,1], color=colors["ee"], label=r"$\mu_{EE}$", lw=lw,
+         zorder=21)
 
 forward = np.concatenate(([[1, 0]], np.diff(mean[:,:2], axis=0)), axis=0)
 err = [get_normal_error(std[i, :], forward[i,:]) for i in range(len(std))]
-draw_error_band(axs, mean[:, 0], mean[:,1], err, facecolor=colors["ee"], edgecolor="none", alpha=.5, zorder=15, label=r"$\sigma_{EE}$")
+draw_error_band(axs, mean[:, 0], mean[:,1], err, facecolor=colors["ee"], edgecolor="none", alpha=.3, zorder=15, label=r"$\sigma_{EE}$")
 
 # Set Legend
 axs.legend(loc="lower left", prop={'size': text_size}, ncol=1, labelspacing=0.1, columnspacing=0.5)

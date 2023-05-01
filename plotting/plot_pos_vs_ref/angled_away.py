@@ -339,7 +339,9 @@ axs2.spines['right'].set_visible(False)
 axs2.set_xlabel("x [m]", fontsize=text_size)
 axs2.set_ylabel("y [m]", fontsize=text_size)
 axs2.set_xlim([-2.2, 0.3])
-axs2.set_ylim([-0.75, 2.1])
+axs2.set_ylim([-0.75, 2.2])
+
+axs2.tick_params(axis='both', which='major', labelsize=0.8*text_size)
 
 handles, labels = fig2.gca().get_legend_handles_labels()
 by_label = dict(zip(labels, handles))
@@ -354,11 +356,13 @@ AngleAnnotation(xy=angle_points[0,:],
                 p1=angle_points[1,:],
                 p2=angle_points[2,:],
                 ax=axs2,
-                size=2000,
+                size=2375,
                 lw=0.8*lw,
                 linestyle=":")
-text_position = np.mean(angle_points[1:,:],axis=0) + np.array([-.2, 0.05])
+text_position = np.mean(angle_points[1:,:],axis=0) + np.array([-.05, 0.025])
 axs2.annotate(rf"$\psi_{wall_str} = {180/np.pi * wall_angle:.1f}^\circ$", text_position, fontsize=0.8*text_size)
+
+axs2.set_title("(b) Angled Away", loc='left', pad=25, fontsize=1.2*text_size)
 
 ####################################################
 ############## EE Position and Reference ###########

@@ -18,7 +18,6 @@ from robot import fk
 from robot import rot_z
 from angle_annotation import AngleAnnotation
 
-
 # Function for guessing ros message tupe
 def guess_msgtype(path: Path) -> str:
     """Guess message type name from path."""
@@ -44,10 +43,11 @@ register_types(add_types)
 
 
 # The time interval we want to plot
-time = (30, 60)
+time = (5, 45)
 
 # File path to rosbag
-path ='/home/anton/Desktop/rosbags/2023_04_05/angled_towards/rosbag2-20_54_53-success2'
+path ='/home/anton/Desktop/rosbags/2023_04_28/superimposed_altitude/rosbag2_2023_04_28-20_07_52'
+
 
 # Topics to collect data from
 topics=['/fmu/in/trajectory_setpoint',
@@ -254,7 +254,7 @@ wall_yaw = -np.arctan2(
         q0_wall**2 + q1_wall**2 - q2_wall**2 - q3_wall**2
     )
 
-wall_angle = np.mean(wall_yaw)
+wall_angle = 0*np.mean(wall_yaw)
 wall_fun = lambda x: np.tan(wall_angle) * x + (wall_pos[0] - np.tan(wall_angle) * wall_pos[1])
 
 
@@ -274,7 +274,6 @@ corners = np.stack((wall_bottom_left, wall_bottom_right,
                     wall_top_right, wall_top_left))
 
 upper_bound = max(wall_top_right[1], wall_top_left[1])
-
 
 q0 = odom_q[:,0]
 q1 = odom_q[:,1]
@@ -340,9 +339,7 @@ axs2.spines['right'].set_visible(False)
 axs2.set_xlabel("x [m]", fontsize=text_size)
 axs2.set_ylabel("y [m]", fontsize=text_size)
 axs2.set_xlim([-2.2, 0.3])
-axs2.set_ylim([-0.75, 2.2])
-
-axs2.tick_params(axis='both', which='major', labelsize=0.8*text_size)
+axs2.set_ylim([-0.75, 2.5])
 
 handles, labels = fig2.gca().get_legend_handles_labels()
 by_label = dict(zip(labels, handles))
@@ -360,17 +357,15 @@ AngleAnnotation(xy=angle_points[0,:],
                 size=2000,
                 lw=0.8*lw,
                 linestyle=":")
-text_position = np.mean(angle_points[1:,:],axis=0) + np.array([-.5, 0.05])
+text_position = np.mean(angle_points[1:,:],axis=0) + np.array([-.2, 0.05])
 axs2.annotate(rf"$\psi_{wall_str} = {180/np.pi * wall_angle:.1f}^\circ$", text_position, fontsize=0.8*text_size)
-
-axs2.set_title("(c) Angled Towards", loc='left', pad=25, fontsize=1.2*text_size)
 
 ####################################################
 ############## EE Position and Reference ###########
 ####################################################
-fig4, axs4 = plt.subplots(2, sharex="all")
+fig4, axs4 = plt.subplots(3, sharex="all")
 
-for i in range(2):
+for i in range(3):
     axs4[i].spines['top'].set_visible(False)
     axs4[i].spines['right'].set_visible(False)
     #axs4[i].spines['bottom'].set_visible(False)
@@ -385,10 +380,13 @@ axs4[0].yaxis.set_major_locator(MultipleLocator(1))
 axs4[0].yaxis.set_major_formatter('{x:.0f}')
 axs4[0].yaxis.set_minor_locator(MultipleLocator(0.2))
 
-axs4[1].yaxis.set_major_locator(MultipleLocator(5))
+axs4[1].yaxis.set_major_locator(MultipleLocator(0.5))
 axs4[1].yaxis.set_major_formatter('{x:.0f}')
-axs4[1].yaxis.set_minor_locator(MultipleLocator(1))
+axs4[1].yaxis.set_minor_locator(MultipleLocator(0.1))
 
+axs4[2].yaxis.set_major_locator(MultipleLocator(5))
+axs4[2].yaxis.set_major_formatter('{x:.0f}')
+axs4[2].yaxis.set_minor_locator(MultipleLocator(1))
 
 
 axs4[0].plot(t_ee_reference[ee_ref_idx[0]:ee_ref_idx[1]] - t_ee_reference[ee_ref_idx[0]],
@@ -404,6 +402,16 @@ axs4[0].legend([r"$x_{EE,ref}$", r"$y_{EE,ref}$",
 axs4[0].set_ylabel("Position [m]", fontsize=text_size)
 axs4[0].set_xlim([0, time[1]-time[0]])
 
+axs4[1].plot(t_ee_reference[ee_ref_idx[0]:ee_ref_idx[1]] - t_ee_reference[ee_ref_idx[0]],
+             ee_reference[ee_ref_idx[0]:ee_ref_idx[1],2], '--', color="grey", lw=lw)
+axs4[1].plot(t_joint_state[joint_state_idx[0]:joint_state_idx[1]] - t_joint_state[joint_state_idx[0]],
+             ee[joint_state_idx[0]:joint_state_idx[1], 2], '-', color=colors["x"], lw=lw)
+axs4[1].legend([r"$z_{EE,ref}$", r"$z_{EE}$"],
+                loc="lower left", prop={'size': text_size}, ncol=2,
+                labelspacing=0.1, columnspacing=0.5)
+axs4[1].set_ylabel("Position [m]", fontsize=text_size)
+axs4[1].set_xlim([0, time[1]-time[0]])
+
 q0_ref = ee_reference_q[:,0]
 q1_ref = ee_reference_q[:,1]
 q2_ref = ee_reference_q[:,2]
@@ -414,17 +422,17 @@ ee_yaw_ref = np.arctan2(
     )
 
 
-axs4[1].plot(t_ee_reference[ee_ref_idx[0]:ee_ref_idx[1]] - t_ee_reference[ee_ref_idx[0]],
+axs4[2].plot(t_ee_reference[ee_ref_idx[0]:ee_ref_idx[1]] - t_ee_reference[ee_ref_idx[0]],
              180.0 / np.pi  * ee_yaw_ref[ee_ref_idx[0]:ee_ref_idx[1]], '--', color="grey", label=r"$\psi_{EE,ref}$", lw=lw)
-axs4[1].plot(t_wall[wall_idx[0]:wall_idx[1]] - t_wall[wall_idx[0]],
+axs4[2].plot(t_wall[wall_idx[0]:wall_idx[1]] - t_wall[wall_idx[0]],
              180.0 / np.pi * np.ones_like(t_wall[wall_idx[0]:wall_idx[1]])*wall_angle, '--', color=colors["wall_yaw"], label= r"$\psi_{Wall}$", lw=lw)
-axs4[1].plot(t_odom[odom_idx[0]:odom_idx[1]] - t_odom[odom_idx[0]],
+axs4[2].plot(t_odom[odom_idx[0]:odom_idx[1]] - t_odom[odom_idx[0]],
              180.0 / np.pi  * yaw[odom_idx[0]:odom_idx[1]], '-', color=colors["yaw"], label=r"$\psi_{EE}$", lw=lw)
-axs4[1].legend(loc="upper left", prop={'size': text_size}, ncol=3,
+axs4[2].legend(loc="upper left", prop={'size': text_size}, ncol=3,
                 labelspacing=0.1, columnspacing=0.5)
-axs4[1].set_xlabel("Time [s]", fontsize=text_size)
-axs4[1].set_ylabel(r"Yaw [$^\circ$]", fontsize=text_size)
-axs4[1].set_xlim([0, time[1]-time[0]])
+axs4[2].set_xlabel("Time [s]", fontsize=text_size)
+axs4[2].set_ylabel(r"Yaw [$^\circ$]", fontsize=text_size)
+axs4[2].set_xlim([0, time[1]-time[0]])
 #plt.show()
 
 # Save the Figures

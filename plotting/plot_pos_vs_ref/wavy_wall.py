@@ -18,7 +18,6 @@ from robot import fk
 from robot import rot_z
 from angle_annotation import AngleAnnotation
 
-
 # Function for guessing ros message tupe
 def guess_msgtype(path: Path) -> str:
     """Guess message type name from path."""
@@ -44,10 +43,11 @@ register_types(add_types)
 
 
 # The time interval we want to plot
-time = (30, 60)
+time = (15, 49)
 
 # File path to rosbag
-path ='/home/anton/Desktop/rosbags/2023_04_05/angled_towards/rosbag2-20_54_53-success2'
+path ='/home/anton/Desktop/rosbags/2023_04_28/wavy_surface/rosbag2-16_53_32-success5'
+
 
 # Topics to collect data from
 topics=['/fmu/in/trajectory_setpoint',
@@ -241,10 +241,12 @@ for i in range(ee_ref_idx[0], ee_ref_idx[1]):
         decision_idx += [i]
 
 
-#############################################################
+ #############################################################
 ################ Wall Patch Definition ######################
 #############################################################
-wall_pos = np.mean(wall, axis=0)
+wall_pos =  np.mean(wall, axis=0)
+y_diff = wall_pos[0] - 1.5
+#wall_pos[0] -= y_diff
 q0_wall = wall_q[:,0]
 q1_wall = wall_q[:,1]
 q2_wall = wall_q[:,2]
@@ -255,26 +257,45 @@ wall_yaw = -np.arctan2(
     )
 
 wall_angle = np.mean(wall_yaw)
-wall_fun = lambda x: np.tan(wall_angle) * x + (wall_pos[0] - np.tan(wall_angle) * wall_pos[1])
 
 
-wall_side=np.array([-1.9, 0.0])
-wall_up = np.array([0, 0.25])
+##############################################
+###### Wall Length Definitions ###############
+#                      l                     #
+#               ________________             #
+#               |__    __    __| d           #
+#                  \__/  \__/    d_b         #
+#              off2   a mid b off1           #
+#                                            #
+##############################################
+wall_angle = 0.0 * np.pi/180
+d = 0.25
+l = 2.4
+off1 = 0.23
+off2 = 0.21
+mid = 0.16
+a = 0.4
+b = 0.1
+d_b = 0.09
+print(off1 + off2 + mid + 4*a + 2*b)
+assert(np.abs(l - (off1 + off2 + mid + 4*a + 2*b)) < 0.001)
+
+corners = np.stack(([-l, 0],
+                    [-l, d],
+                    [0, d],
+                    [0, 0],
+                    [-off1, 0],
+                    [-off1-a, -d_b],
+                    [-off1-a-b, -d_b],
+                    [-off1-2*a-b, 0],
+                    [-off1-2*a-b-mid, 0],
+                    [-off1-3*a-b-mid, -d_b],
+                    [-off1-3*a-2*b-mid, -d_b],
+                    [-off1-4*a-2*b-mid, 0.0]
+                    ))
 rot = np.array([[np.cos(wall_angle), -np.sin(wall_angle)],
                 [np.sin(wall_angle),  np.cos(wall_angle)]])
-wall_side = rot @ wall_side
-wall_up = rot @ wall_up
-
-wall_bottom_right = np.array([0.25, wall_fun(0.25)])
-wall_bottom_left = wall_bottom_right + wall_side
-
-wall_top_right = wall_bottom_right + wall_up
-wall_top_left = wall_bottom_right + wall_side + wall_up
-corners = np.stack((wall_bottom_left, wall_bottom_right,
-                    wall_top_right, wall_top_left))
-
-upper_bound = max(wall_top_right[1], wall_top_left[1])
-
+corners = np.array([rot @ corners[i,:] for i in range(len(corners))]) + np.array([0.1, wall_pos[0]])
 
 q0 = odom_q[:,0]
 q1 = odom_q[:,1]
@@ -316,14 +337,36 @@ for i in decision_idx[1:]:
     #          color="grey")
 
 axs2.add_patch(Polygon(corners,
-                       facecolor='xkcd:light grey',
-                       edgecolor='black',
-                       alpha=1,
-                       label='_nolegend_',
-                       zorder=0))
+                        facecolor='xkcd:light grey', edgecolor='black', alpha=1, label='_nolegend_',
+                        zorder=0))
 
-axs2.plot(np.linspace(-10,10,2), np.ones(2) * upper_bound, color='black', lw=0.8*lw, linestyle='--', zorder=0)
+axs2.plot([corners[-1,0], corners[-4,0]],
+            [corners[-1,1], corners[-4,1]], color='black', lw=0.8*lw, linestyle='--', zorder=3)
+axs2.plot([corners[4,0], corners[7,0]],
+            [corners[4,1], corners[7,1]], color='black', lw=0.8*lw, linestyle='--', zorder=3)
 
+
+wall_str = "{\\mathrm{Wall}}"
+
+AngleAnnotation(xy=corners[-1],
+                p1=corners[-2],
+                p2=corners[-4],
+                ax=axs2,
+                size=420,
+                lw=0.5*lw,
+                linestyle=":")
+text_position = corners[-1] + np.array([0.05, 0.05])
+axs2.annotate(rf"${180/np.pi * np.arctan2(-d_b,a):.1f}^\circ$", text_position, fontsize=0.8*text_size)
+
+AngleAnnotation(xy=corners[4],
+                p1=corners[7],
+                p2=corners[5],
+                ax=axs2,
+                size=420,
+                lw=0.8*lw,
+                linestyle=":")
+text_position = corners[4] + np.array([-0.15, 0.05])
+axs2.annotate(rf"${180/np.pi * np.arctan2(d_b, a):.1f}^\circ$", text_position, fontsize=0.8*text_size)
 axs2.xaxis.set_major_locator(MultipleLocator(1))
 axs2.xaxis.set_major_formatter('{x:.0f}')
 axs2.xaxis.set_minor_locator(MultipleLocator(0.2))
@@ -339,31 +382,12 @@ axs2.spines['right'].set_visible(False)
 
 axs2.set_xlabel("x [m]", fontsize=text_size)
 axs2.set_ylabel("y [m]", fontsize=text_size)
-axs2.set_xlim([-2.2, 0.3])
-axs2.set_ylim([-0.75, 2.2])
-
-axs2.tick_params(axis='both', which='major', labelsize=0.8*text_size)
+axs2.set_xlim([-2.5, 0.3])
+axs2.set_ylim([-0.75, 2.5])
 
 handles, labels = fig2.gca().get_legend_handles_labels()
 by_label = dict(zip(labels, handles))
 axs2.legend(by_label.values(), by_label.keys(), loc="lower left", prop={'size': text_size}, ncol=2, labelspacing=0.1, columnspacing=0.5)
-
-wall_str = "{Wall}"
-angle_points = np.stack((wall_top_right,
-                        wall_top_right - np.array([.1, 0]),
-                        wall_top_left))
-
-AngleAnnotation(xy=angle_points[0,:],
-                p1=angle_points[1,:],
-                p2=angle_points[2,:],
-                ax=axs2,
-                size=2000,
-                lw=0.8*lw,
-                linestyle=":")
-text_position = np.mean(angle_points[1:,:],axis=0) + np.array([-.5, 0.05])
-axs2.annotate(rf"$\psi_{wall_str} = {180/np.pi * wall_angle:.1f}^\circ$", text_position, fontsize=0.8*text_size)
-
-axs2.set_title("(c) Angled Towards", loc='left', pad=25, fontsize=1.2*text_size)
 
 ####################################################
 ############## EE Position and Reference ###########
@@ -388,6 +412,7 @@ axs4[0].yaxis.set_minor_locator(MultipleLocator(0.2))
 axs4[1].yaxis.set_major_locator(MultipleLocator(5))
 axs4[1].yaxis.set_major_formatter('{x:.0f}')
 axs4[1].yaxis.set_minor_locator(MultipleLocator(1))
+
 
 
 

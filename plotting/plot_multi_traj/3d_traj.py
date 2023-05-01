@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt 
 import numpy as np 
 from pathlib import Path
+from matplotlib.patches import Polygon 
 from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 
 from rosbags.typesys import get_types_from_msg, register_types
@@ -41,6 +42,27 @@ def plotCubeAt(pos=(0,0,0), size=(1,1,1), ax=None,**kwargs):
         ax.plot_surface(X, Y, Z, rstride=1, cstride=1, **kwargs)
 
 
+def draw_error_band(ax, x, y, err, **kwargs):
+    # Calculate normals via centered finite differences (except the first point
+    # which uses a forward difference and the last point which uses a backward
+    # difference).
+    dx = np.concatenate([[x[1] - x[0]], x[2:] - x[:-2], [x[-1] - x[-2]]])
+    dy = np.concatenate([[y[1] - y[0]], y[2:] - y[:-2], [y[-1] - y[-2]]])
+    l = np.hypot(dx, dy)
+    nx = dy / l
+    ny = -dx / l
+
+    # end points of errors
+    xp = x + nx * err
+    yp = y + ny * err
+    xn = x - nx * err
+    yn = y - ny * err
+
+    vertices = np.block([[xp, xn[::-1]],
+                         [yp, yn[::-1]]]).T
+
+    ax.fill(vertices[:,0], vertices[:,1], **kwargs)
+
 # Function for guessing ros message tupe
 def guess_msgtype(path: Path) -> str:
     """Guess message type name from path."""
@@ -62,19 +84,16 @@ for pathstr in [
 
 register_types(add_types)
 
-
-
 # The time interval we want to plot
-times = [(15, 42.5), (15, 45), (15, 47), (15, 42.5), (15, 43), (15, 39), (15, 38)]
+times = [(7.5, 45),(7.5, 52.5),(7.5, 42.5),(7.5, 52.5),(7.5, 47.5)]
 
 # File path to rosbag
-paths = ['/home/anton/Desktop/rosbags/2023_04_05/straight_wall/rosbag2-18_59_27-success1-alpha02',
-         '/home/anton/Desktop/rosbags/2023_04_05/straight_wall/rosbag2-19_45_11-success2',
-         '/home/anton/Desktop/rosbags/2023_04_05/straight_wall/rosbag2-20_41_33-success-4',
-         '/home/anton/Desktop/rosbags/2023_04_05/straight_wall/rosbag2-20_44_41-success5',
-         '/home/anton/Desktop/rosbags/2023_04_06/straight_wall/rosbag2-09_12_22-success1',
-         '/home/anton/Desktop/rosbags/2023_04_06/straight_wall/rosbag2-09_17_48-success2',
-         '/home/anton/Desktop/rosbags/2023_04_06/straight_wall/rosbag2-09_22_41-success3']
+paths = ['/home/anton/Desktop/rosbags/2023_04_28/superimposed_altitude/rosbag2-19_48_30-success1',
+         '/home/anton/Desktop/rosbags/2023_04_28/superimposed_altitude/rosbag2-20_25_31-success2',
+         '/home/anton/Desktop/rosbags/2023_04_28/superimposed_altitude/rosbag2-20_28_17-success3',
+         '/home/anton/Desktop/rosbags/2023_04_28/superimposed_altitude/rosbag2-20_31_00-success4',
+         '/home/anton/Desktop/rosbags/2023_04_28/superimposed_altitude/rosbag2-20_33_47-success5'
+         ]
 
 # Topics to collect data from
 topics=['/fmu/out/vehicle_odometry',
@@ -87,7 +106,9 @@ topics=['/fmu/out/vehicle_odometry',
 ee_col = []
 t_ee_col = []
 
-
+#####################################################
+################ Init the Plots #####################
+#####################################################
 fig = plt.figure()
 axs = plt.axes(projection='3d')
 
@@ -111,6 +132,41 @@ axs.yaxis.set_minor_locator(MultipleLocator(0.5))
 axs.zaxis.set_major_locator(MultipleLocator(1))
 axs.zaxis.set_major_formatter('{x:.0f}')
 axs.zaxis.set_minor_locator(MultipleLocator(0.5))
+
+fig2, ax2 = plt.subplots(2)
+ax2[0].set_xlim([-2.4, 0.5])
+ax2[0].set_ylim([1.2, 2.0])
+
+ax2[0].set_xlabel("x[m]",fontsize=text_size)
+ax2[0].set_ylabel("z[m]",fontsize=text_size)
+
+ax2[0].tick_params(axis='both', which='major', labelsize=0.8*text_size)
+ax2[0].xaxis.set_major_locator(MultipleLocator(1))
+ax2[0].xaxis.set_major_formatter('{x:.0f}')
+ax2[0].xaxis.set_minor_locator(MultipleLocator(0.2))
+
+ax2[0].yaxis.set_major_locator(MultipleLocator(1))
+ax2[0].yaxis.set_major_formatter('{x:.0f}')
+ax2[0].yaxis.set_minor_locator(MultipleLocator(0.2))
+
+ax2[0].set_aspect('equal')
+
+ax2[1].set_xlim([0.0, 30.0])
+ax2[1].set_ylim([1.2,2.0])
+
+ax2[1].set_xlabel("t[s]",fontsize=text_size)
+ax2[1].set_ylabel("z[m]",fontsize=text_size)
+
+ax2[1].tick_params(axis='both', which='major', labelsize=0.8*text_size)
+ax2[1].xaxis.set_major_locator(MultipleLocator(10))
+ax2[1].xaxis.set_major_formatter('{x:.0f}')
+ax2[1].xaxis.set_minor_locator(MultipleLocator(1))
+
+ax2[1].yaxis.set_major_locator(MultipleLocator(1))
+ax2[1].yaxis.set_major_formatter('{x:.0f}')
+ax2[1].yaxis.set_minor_locator(MultipleLocator(0.2))
+
+
 ##############################################################
 ############## Load all the data #############################
 ##############################################################
@@ -142,7 +198,7 @@ for idx, path in enumerate(paths[:6]):
                 msg = deserialize_cdr(rawdata, connection.msgtype)
                 t_odom += [timestamp]
                 odom += [msg.position]
-                odom_q += [msg.q]
+                odom_q += [msg.q]      
 
             if connection.topic == topics[1]:
                 msg = deserialize_cdr(rawdata, connection.msgtype)
@@ -233,7 +289,7 @@ for idx, path in enumerate(paths[:6]):
     # to imply the beginning of the trajectory and move that to  #
     # t = 0                                                      #
     ##############################################################
-    start_idx  = np.abs(np.diff(ee[:,1])).argmax()
+    start_idx  = np.abs(np.diff(ee[:,1])).argmax() - 50
     t_ee -= t_ee[start_idx]
 
 
@@ -254,7 +310,18 @@ for idx, path in enumerate(paths[:6]):
 
     wall_angle = np.mean(wall_yaw)
     if idx == 0:
-        plotCubeAt(pos=(-2,1.55,1.3), size=(2.4,0.1,0.75), ax=axs, color='xkcd:light grey',alpha=0.5)
+        pass
+        plotCubeAt(pos=(-2,1.55,1.3), size=(2.4,0.1,0.6), ax=axs, color='xkcd:light grey',alpha=0.5)
+        axs.plot3D([-2,0.4],[1.5,1.5],[1.7,1.7], color="black",linestyle="--", lw=0.5*lw)
+        axs.plot3D([-2,0.4],[1.5,1.5],[1.5,1.5], color="black",linestyle="--", lw=0.5*lw)
+
+        ax2[0].add_patch(Polygon(([-2,1.3], [-2,1.9], [0.4,1.9], [0.4,1.3]), facecolor='xkcd:light grey', edgecolor="black", lw=1.2*lw, alpha=1))
+        ax2[0].plot([-2,0.4],[1.7,1.7], color="black",linestyle="--", lw=0.7*lw)
+        ax2[0].plot([-2,0.4],[1.5,1.5], color="black",linestyle="--", lw=0.7*lw)
+
+        ax2[1].plot([0,30],[1.7,1.7], color="black",linestyle="--", lw=0.7*lw)
+        ax2[1].plot([0,30],[1.5,1.5], color="black",linestyle="--", lw=0.7*lw)
+
 
     # Transform such that all walls are at the same spot
     ee[:, 1] -= y_diff
@@ -269,7 +336,20 @@ for idx, path in enumerate(paths[:6]):
     ###########################################################
     ############# Plot the current data #######################
     ###########################################################
-    axs.plot3D(ee[:, 0], ee[:, 1], ee[:, 2], color="black", alpha=0.4, lw=lw)
+    
+    d2_idx = np.argwhere(ee[:, 1] > 1.4)[0][0]
+    ax2[0].plot(ee[d2_idx:joint_state_idx[1], 0],
+             ee[d2_idx:joint_state_idx[1], 2],
+                color="black", alpha=0.3, lw=0.7*lw)
+    ax2[1].plot(t_ee[joint_state_idx[0]:joint_state_idx[1]],
+                ee[joint_state_idx[0]:joint_state_idx[1], 2],
+                color="black", alpha=0.3, lw=0.7*lw)
+    
+
+    axs.plot3D(ee[joint_state_idx[0]:joint_state_idx[1], 0],
+               ee[joint_state_idx[0]:joint_state_idx[1], 1],
+               ee[joint_state_idx[0]:joint_state_idx[1], 2],
+                color="black", alpha=0.5, lw=lw)
 
 
 
@@ -277,15 +357,15 @@ for idx, path in enumerate(paths[:6]):
 ########## Find the mean trajectory ################
 ####################################################
 ts = np.concatenate([t for t in t_ee_col])
-t_mean = np.arange(start=min(ts),
-                   stop=max(ts),
+t_mean = np.arange(start=-5,
+                   stop=40,
                    step=1)
 
 mean = []
 std = []
 for t in t_mean:
     points = []
-    for i in range(len(paths[:6])):
+    for i in range(len(paths)):
         idx = np.abs(t - t_ee_col[i]).argmin()
         points += [ee_col[i][idx, :]]
     mean += [np.mean(points, axis=0)]
@@ -296,10 +376,21 @@ mean = np.array(mean, dtype=float)
 std = np.array(std, dtype=float)
 
 axs.plot3D(mean[:, 0], mean[:,1], mean[:,2], color=colors["ee"], label=r"$\mu_{EE}$", zorder=21)
+d2_idx = np.argwhere(mean[:, 1] > 1.4)[0][0]
+ax2[0].plot(mean[d2_idx:, 0], mean[d2_idx:,2], color=colors["ee"], lw=lw, label=r"$\mu_{EE}$", zorder=21)
+ax2[1].plot(t_mean, mean[:,2], color=colors["ee"], lw=lw, label=r"$\mu_{EE,z}$", zorder=21)
+draw_error_band(ax2[1], t_mean, mean[:,2], std[:,2], facecolor=colors["ee"], alpha=.3,label=r"$\sigma_z$")
 
+ax2[0].legend(loc="lower left", prop={'size': text_size}, ncol=1, labelspacing=0.1, columnspacing=0.5)
+ax2[1].legend(loc="lower left", prop={'size': text_size}, ncol=1, labelspacing=0.1, columnspacing=0.5)
 
 # Set Legend
 axs.legend(prop={'size': text_size}, ncol=1, labelspacing=0.1, columnspacing=0.5)
+#ax2.legend()
+
+fig2.subplots_adjust(bottom=5.0, top=6.0)
+fig2.set_size_inches(size)
+fig2.savefig("../plots/wall_painting.png", dpi=dpi, bbox_inches='tight')
 
 
-plt.show()
+#plt.show()

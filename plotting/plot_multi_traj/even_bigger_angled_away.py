@@ -115,8 +115,8 @@ axs.spines['right'].set_visible(False)
 #axs.spines['bottom'].set_visible(False)
 #axs.spines['left'].set_visible(False)
 
-axs.set_xlabel(r"$x[m]$",fontsize=text_size)
-axs.set_ylabel(r"$y[m]$",fontsize=text_size)
+axs.set_xlabel("x[m]",fontsize=text_size)
+axs.set_ylabel("y[m]",fontsize=text_size)
 axs.set_xlim([-2, 0.5])
 axs.set_ylim([-0.2, 2.5])
 #axs.set_facecolor('xkcd:light grey')
@@ -285,7 +285,7 @@ for idx, path in enumerate(paths[:6]):
         corners = np.stack((wall_bottom_left, wall_bottom_right,
                             wall_top_right, wall_top_left))
         axs.add_patch(Polygon(corners,
-                              facecolor='xkcd:light grey', edgecolor='black', alpha=1, label='_nolegend_',
+                              facecolor='xkcd:light grey', edgecolor='black', alpha=1, label='_nolegend_', lw=1.2*lw,
                               zorder=1))
         upper_bound = max(wall_top_right[1], wall_top_left[1])
         axs.plot(np.linspace(-10,10,2), np.ones(2) * upper_bound, color='black', lw=0.8*lw, linestyle='--', zorder=0)
@@ -319,7 +319,7 @@ for idx, path in enumerate(paths[:6]):
     ###########################################################
     ############# Plot the current data #######################
     ###########################################################
-    axs.plot(ee[:, 0], ee[:, 1], color="black", alpha=0.4, zorder=20, lw=lw)
+    #axs.plot(ee[:, 0], ee[:, 1], color="black", alpha=0.4, zorder=20, lw=lw)
 
     ###########################################################
     axs_t[0].plot(t_ee, ee[:, 0], color="grey")
@@ -356,7 +356,7 @@ draw_error_band(axs_t[0], t_mean, mean[:,0], std[:,0], facecolor="orange", alpha
 draw_error_band(axs_t[1], t_mean, mean[:,1], std[:,1], facecolor="orange", alpha=.3,label=r"$\sigma_x$")
 draw_error_band(axs_t[2], t_mean, mean[:,2], std[:,2], facecolor="orange", alpha=.3,label=r"$\sigma_x$")
 
-axs.plot(mean[:, 0], mean[:,1], color=colors["ee"], label=r"$\mu_{EE}$", path_effects=[pe.Stroke(linewidth=lw, foreground='black'), pe.Normal()], zorder=21)
+axs.plot(mean[:, 0], mean[:,1], color=colors["ee"], label=r"$\mu_{EE}$", lw=lw, zorder=21)
 
 #forward = np.concatenate(([[1, 0]], np.diff(mean[:,:2], axis=0)), axis=0)
 #err = [get_normal_error(std[i, :], forward[i,:]) for i in range(len(std))]

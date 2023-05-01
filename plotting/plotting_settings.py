@@ -6,7 +6,7 @@ matplotlib.rcParams["font.family"] = "serif"
 # Define plot resolution and size
 dpi = 250
 size = (20, 10)
-text_size = 24
+text_size = 35
 lw = 3
 
 

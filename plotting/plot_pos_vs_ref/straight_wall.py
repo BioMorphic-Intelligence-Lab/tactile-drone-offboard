@@ -339,7 +339,9 @@ axs2.spines['right'].set_visible(False)
 axs2.set_xlabel("x [m]", fontsize=text_size)
 axs2.set_ylabel("y [m]", fontsize=text_size)
 axs2.set_xlim([-2.2, 0.3])
-axs2.set_ylim([-0.75, 1.6])
+axs2.set_ylim([-0.75, 2.2])
+
+axs2.tick_params(axis='both', which='major', labelsize=0.8*text_size)
 
 handles, labels = fig2.gca().get_legend_handles_labels()
 by_label = dict(zip(labels, handles))
@@ -359,6 +361,8 @@ AngleAnnotation(xy=angle_points[0,:],
                 linestyle=":")
 text_position = np.mean(angle_points[1:,:],axis=0) + np.array([-.2, 0.05])
 axs2.annotate(rf"$\psi_{wall_str} = {180/np.pi * wall_angle:.1f}^\circ$", text_position, fontsize=0.8*text_size)
+
+axs2.set_title("(a) Straight Wall", loc='left', pad=25, fontsize=1.2*text_size)
 
 ####################################################
 ############## EE Position and Reference ###########
