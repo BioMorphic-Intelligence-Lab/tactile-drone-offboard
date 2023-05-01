@@ -154,7 +154,7 @@ ax2[0].set_aspect('equal')
 ax2[1].set_xlim([0.0, 30.0])
 ax2[1].set_ylim([1.2,2.0])
 
-ax2[1].set_xlabel("t[s]",fontsize=text_size)
+ax2[1].set_xlabel("Time [s]",fontsize=text_size)
 ax2[1].set_ylabel("z[m]",fontsize=text_size)
 
 ax2[1].tick_params(axis='both', which='major', labelsize=0.8*text_size)
