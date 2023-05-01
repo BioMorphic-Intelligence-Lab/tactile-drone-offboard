@@ -354,10 +354,10 @@ AngleAnnotation(xy=angle_points[0,:],
                 p1=angle_points[1,:],
                 p2=angle_points[2,:],
                 ax=axs2,
-                size=2000,
+                size=2750,
                 lw=0.8*lw,
                 linestyle=":")
-text_position = np.mean(angle_points[1:,:],axis=0) + np.array([-.2, 0.05])
+text_position = np.mean(angle_points[1:,:],axis=0) + np.array([-.4, 0.05])
 axs2.annotate(rf"$\psi_{wall_str} = {180/np.pi * wall_angle:.1f}^\circ$", text_position, fontsize=0.8*text_size)
 
 ####################################################
