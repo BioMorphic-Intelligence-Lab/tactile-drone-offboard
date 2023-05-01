@@ -133,38 +133,53 @@ axs.zaxis.set_major_locator(MultipleLocator(1))
 axs.zaxis.set_major_formatter('{x:.0f}')
 axs.zaxis.set_minor_locator(MultipleLocator(0.5))
 
-fig2, ax2 = plt.subplots(2)
-ax2[0].set_xlim([-2.4, 0.5])
-ax2[0].set_ylim([1.2, 2.0])
+fig2, ax2 = plt.subplots()
+ax2.set_xlim([-2.4, 0.5])
+ax2.set_ylim([1.2, 2.0])
 
-ax2[0].set_xlabel("x[m]",fontsize=text_size)
-ax2[0].set_ylabel("z[m]",fontsize=text_size)
+ax2.set_xlabel("x[m]",fontsize=text_size)
+ax2.set_ylabel("z[m]",fontsize=text_size)
 
-ax2[0].tick_params(axis='both', which='major', labelsize=0.8*text_size)
-ax2[0].xaxis.set_major_locator(MultipleLocator(1))
-ax2[0].xaxis.set_major_formatter('{x:.0f}')
-ax2[0].xaxis.set_minor_locator(MultipleLocator(0.2))
+ax2.tick_params(axis='both', which='major', labelsize=0.8*text_size)
+ax2.xaxis.set_major_locator(MultipleLocator(1))
+ax2.xaxis.set_major_formatter('{x:.0f}')
+ax2.xaxis.set_minor_locator(MultipleLocator(0.2))
 
-ax2[0].yaxis.set_major_locator(MultipleLocator(1))
-ax2[0].yaxis.set_major_formatter('{x:.0f}')
-ax2[0].yaxis.set_minor_locator(MultipleLocator(0.2))
+ax2.yaxis.set_major_locator(MultipleLocator(1))
+ax2.yaxis.set_major_formatter('{x:.0f}')
+ax2.yaxis.set_minor_locator(MultipleLocator(0.2))
 
-ax2[0].set_aspect('equal')
+ax2.set_aspect('equal')
 
-ax2[1].set_xlim([0.0, 30.0])
-ax2[1].set_ylim([1.2,2.0])
 
-ax2[1].set_xlabel("Time [s]",fontsize=text_size)
-ax2[1].set_ylabel("z[m]",fontsize=text_size)
+fig3, ax3 = plt.subplots()
+ax3.set_xlabel("x[m]",fontsize=text_size)
+ax3.set_ylabel("z[m]",fontsize=text_size)
 
-ax2[1].tick_params(axis='both', which='major', labelsize=0.8*text_size)
-ax2[1].xaxis.set_major_locator(MultipleLocator(10))
-ax2[1].xaxis.set_major_formatter('{x:.0f}')
-ax2[1].xaxis.set_minor_locator(MultipleLocator(1))
+ax3.tick_params(axis='both', which='major', labelsize=0.8*text_size)
+ax3.xaxis.set_major_locator(MultipleLocator(1))
+ax3.xaxis.set_major_formatter('{x:.0f}')
+ax3.xaxis.set_minor_locator(MultipleLocator(0.2))
 
-ax2[1].yaxis.set_major_locator(MultipleLocator(1))
-ax2[1].yaxis.set_major_formatter('{x:.0f}')
-ax2[1].yaxis.set_minor_locator(MultipleLocator(0.2))
+ax3.yaxis.set_major_locator(MultipleLocator(1))
+ax3.yaxis.set_major_formatter('{x:.0f}')
+ax3.yaxis.set_minor_locator(MultipleLocator(0.2))
+
+
+ax3.set_xlim([0.0, 30.0])
+ax3.set_ylim([1.4,1.8])
+
+ax3.set_xlabel("Time [s]",fontsize=text_size)
+ax3.set_ylabel("z[m]",fontsize=text_size)
+
+ax3.tick_params(axis='both', which='major', labelsize=0.8*text_size)
+ax3.xaxis.set_major_locator(MultipleLocator(10))
+ax3.xaxis.set_major_formatter('{x:.0f}')
+ax3.xaxis.set_minor_locator(MultipleLocator(1))
+
+ax3.yaxis.set_major_locator(MultipleLocator(1))
+ax3.yaxis.set_major_formatter('{x:.0f}')
+ax3.yaxis.set_minor_locator(MultipleLocator(0.2))
 
 
 ##############################################################
@@ -315,12 +330,12 @@ for idx, path in enumerate(paths[:6]):
         axs.plot3D([-2,0.4],[1.5,1.5],[1.7,1.7], color="black",linestyle="--", lw=0.5*lw)
         axs.plot3D([-2,0.4],[1.5,1.5],[1.5,1.5], color="black",linestyle="--", lw=0.5*lw)
 
-        ax2[0].add_patch(Polygon(([-2,1.3], [-2,1.9], [0.4,1.9], [0.4,1.3]), facecolor='xkcd:light grey', edgecolor="black", lw=1.2*lw, alpha=1))
-        ax2[0].plot([-2,0.4],[1.7,1.7], color="black",linestyle="--", lw=0.7*lw)
-        ax2[0].plot([-2,0.4],[1.5,1.5], color="black",linestyle="--", lw=0.7*lw)
+        ax2.add_patch(Polygon(([-2,1.3], [-2,1.9], [0.4,1.9], [0.4,1.3]), facecolor='xkcd:light grey', edgecolor="black", lw=1.2*lw, alpha=1))
+        ax2.plot([-2,0.4],[1.7,1.7], color="black",linestyle="--", lw=0.7*lw)
+        ax2.plot([-2,0.4],[1.5,1.5], color="black",linestyle="--", lw=0.7*lw)
 
-        ax2[1].plot([0,30],[1.7,1.7], color="black",linestyle="--", lw=0.7*lw)
-        ax2[1].plot([0,30],[1.5,1.5], color="black",linestyle="--", lw=0.7*lw)
+        ax3.plot([0,30],[1.7,1.7], color="black",linestyle="--", lw=0.7*lw)
+        ax3.plot([0,30],[1.5,1.5], color="black",linestyle="--", lw=0.7*lw)
 
 
     # Transform such that all walls are at the same spot
@@ -338,10 +353,10 @@ for idx, path in enumerate(paths[:6]):
     ###########################################################
     
     d2_idx = np.argwhere(ee[:, 1] > 1.4)[0][0]
-    ax2[0].plot(ee[d2_idx:joint_state_idx[1], 0],
+    ax2.plot(ee[d2_idx:joint_state_idx[1], 0],
              ee[d2_idx:joint_state_idx[1], 2],
                 color="black", alpha=0.3, lw=0.7*lw)
-    ax2[1].plot(t_ee[joint_state_idx[0]:joint_state_idx[1]],
+    ax3.plot(t_ee[joint_state_idx[0]:joint_state_idx[1]],
                 ee[joint_state_idx[0]:joint_state_idx[1], 2],
                 color="black", alpha=0.3, lw=0.7*lw)
     
@@ -377,20 +392,23 @@ std = np.array(std, dtype=float)
 
 axs.plot3D(mean[:, 0], mean[:,1], mean[:,2], color=colors["ee"], label=r"$\mu_{EE}$", zorder=21)
 d2_idx = np.argwhere(mean[:, 1] > 1.4)[0][0]
-ax2[0].plot(mean[d2_idx:, 0], mean[d2_idx:,2], color=colors["ee"], lw=lw, label=r"$\mu_{EE}$", zorder=21)
-ax2[1].plot(t_mean, mean[:,2], color=colors["ee"], lw=lw, label=r"$\mu_{EE,z}$", zorder=21)
-draw_error_band(ax2[1], t_mean, mean[:,2], std[:,2], facecolor=colors["ee"], alpha=.3,label=r"$\sigma_z$")
+ax2.plot(mean[d2_idx:, 0], mean[d2_idx:,2], color=colors["ee"], lw=lw, label=r"$\mu_{EE}$", zorder=21)
+ax3.plot(t_mean, mean[:,2], color=colors["ee"], lw=lw, label=r"$\mu_{EE,z}$", zorder=21)
+draw_error_band(ax3, t_mean, mean[:,2], std[:,2], facecolor=colors["ee"], alpha=.3,label=r"$\sigma_z$")
 
-ax2[0].legend(loc="lower left", prop={'size': text_size}, ncol=1, labelspacing=0.1, columnspacing=0.5)
-ax2[1].legend(loc="lower left", prop={'size': text_size}, ncol=1, labelspacing=0.1, columnspacing=0.5)
+ax2.legend(loc="lower left", prop={'size': text_size}, ncol=1, labelspacing=0.1, columnspacing=0.5)
+ax3.legend(loc="lower left", prop={'size': text_size}, ncol=1, labelspacing=0.1, columnspacing=0.5)
 
 # Set Legend
 axs.legend(prop={'size': text_size}, ncol=1, labelspacing=0.1, columnspacing=0.5)
 #ax2.legend()
 
-fig2.subplots_adjust(bottom=5.0, top=6.0)
 fig2.set_size_inches(size)
 fig2.savefig("../plots/wall_painting.png", dpi=dpi, bbox_inches='tight')
+
+
+fig3.set_size_inches(size)
+fig3.savefig("../plots/altitude.png", dpi=dpi, bbox_inches='tight')
 
 
 #plt.show()
