@@ -26,11 +26,11 @@
   <!-- ****************** ROBOT FLYING BASE ************************************  -->
   <link name="base">
     <visual>
-      <!--<origin xyz="-0.18 -0.75 -0.41" rpy="${pi2} 0 ${0.75 * pi}"/>-->
-      <origin xyz="0.75 -0.18 -0.41" rpy="${pi2} 0 ${0.75 * pi + pi2}"/>
+      <!--<origin xyz="0.75 -0.18 -0.41" rpy="${pi2} 0 ${0.75 * pi + pi2}"/>-->
+      <origin xyz="0.63 -0.30 -0.41" rpy="${pi2} 0 ${0.75 * pi + pi2}"/>
       <geometry>
-        <mesh filename="package://am_vis/meshes/HolybroX500V2-withOBC.STL"
-              scale="0.001 0.001 0.001"/>
+        <mesh filename="package://am_vis/meshes/HolybroX500V2-withOBC.dae"
+              scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -44,10 +44,10 @@
   <!-- ****************** ROBOT ARM BASE ************************************  -->
   <link name="arm_base">
     <visual>
-      <origin xyz="0.03 -0.045 -0.03" rpy="${pi2} 0.0 ${pi}"/>
+      <origin xyz="0.015 -0.045 -0.025" rpy="${pi2} 0.0 ${pi}"/>
       <geometry>
-        <mesh filename="package://am_vis/meshes/SensorizedBase.STL"
-              scale="0.001 0.001 0.001"/>
+        <mesh filename="package://am_vis/meshes/SensorizedBase.dae"
+              scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -62,10 +62,11 @@
   <!-- ****************** ROBOT BOTTOM *********************************  -->
   <link name="bottom">
     <visual>
-      <origin xyz="0.03 -0.0165 0.075" rpy="${pi2} ${pi} ${-pi2}"/>
+      <!--<origin xyz="0.03 -0.0165 0.075" rpy="${pi2} ${pi} ${-pi2}"/>-->
+      <origin xyz="0.02725 0.0025 0.0285" rpy="${pi2} ${pi} ${-pi2}"/>
       <geometry>
-        <mesh filename="package://am_vis/meshes/SensorizedBottom.STL"
-              scale="0.001 0.001 0.001"/>
+        <mesh filename="package://am_vis/meshes/SensorizedBottom.dae"
+              scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -84,10 +85,11 @@
   <!-- **************** ROBOT MIDDLE *********************************** -->
   <link name="middle">
     <visual>
-      <origin xyz="-0.03 -0.02 -0.005" rpy="${pi2} 0.0 ${pi2}"/>
+      <!--<origin xyz="-0.03 -0.02 -0.005" rpy="${pi2} 0.0 ${pi2}"/>-->
+      <origin xyz="-0.03 0.002 0.0235" rpy="${pi2} 0.0 ${pi2}"/>
       <geometry>
-        <mesh filename="package://am_vis/meshes/SensorizedMiddle.STL"
-              scale="0.001 0.001 0.001"/>
+        <mesh filename="package://am_vis/meshes/SensorizedMiddle.dae"
+              scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -102,10 +104,11 @@
   <!-- **************** ROBOT TOP *********************************** -->
   <link name="top">
     <visual>
-      <origin xyz="-0.011 0.015 -0.01" rpy="${pi2} 0.0 0.0"/>
+      <!--<origin xyz="-0.011 0.015 -0.01" rpy="${pi2} 0.0 0.0"/>-->
+      <origin xyz="-0.005 -0.008 -0.005" rpy="${pi2} 0.0 0.0"/>
       <geometry>
-        <mesh filename="package://am_vis/meshes/round-top.STL"
-              scale="0.001 0.001 0.001"/>
+        <mesh filename="package://am_vis/meshes/round-top.dae"
+              scale="1 1 1"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -129,7 +132,7 @@
   <joint name="arm_connector" type="fixed">
     <parent link="base"/>
     <child link="arm_base" />
-    <origin xyz="0.0 0.27875 -0.018" rpy="0 ${pi} ${pi2}"/>
+    <origin xyz="0.0 0.235 -0.018" rpy="0 ${pi} ${pi2}"/>
   </joint>
 
   <joint name="base_joint_pitch" type="revolute">
