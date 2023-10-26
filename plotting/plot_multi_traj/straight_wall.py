@@ -257,7 +257,7 @@ for idx, path in enumerate(paths[:6]):
     #############################################################
     ################ Wall Patch Definition ######################
     #############################################################
-    wall_pos =  np.mean(wall, axis=0)
+    wall_pos =  np.mean(wall, axis=0) + 0.04
     y_diff = wall_pos[0] - 1.5
     wall_pos[0] -= y_diff
     q0_wall = wall_q[:,0]
@@ -325,7 +325,7 @@ for idx, path in enumerate(paths[:6]):
     ###########################################################
     ############# Plot the current data #######################
     ###########################################################
-    axs.plot(ee[:, 0], ee[:, 1], color="black", alpha=0.2, zorder=10, lw=0.7*lw)
+    #axs.plot(ee[:, 0], ee[:, 1], color="black", alpha=0.2, zorder=10, lw=0.7*lw)
 
     ###########################################################
     axs_t[0].plot(t_ee, ee[:, 0], color="grey")

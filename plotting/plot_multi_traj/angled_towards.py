@@ -258,7 +258,7 @@ for idx, path in enumerate(paths[:6]):
     #############################################################
     ################ Wall Patch Definition ######################
     #############################################################
-    wall_pos =  np.mean(wall, axis=0) # [1.66, 0]  [1.78, 0]
+    wall_pos =  np.mean(wall, axis=0) + np.array([0.05, 0.0, 0])# [1.66, 0]  [1.78, 0]
     y_diff = wall_pos[0] - 1.5
     wall_pos[0] -= y_diff
     q0_wall = wall_q[:,0]
@@ -270,7 +270,7 @@ for idx, path in enumerate(paths[:6]):
             q0_wall**2 + q1_wall**2 - q2_wall**2 - q3_wall**2
         )
 
-    wall_angle = np.mean(wall_yaw)
+    wall_angle = np.deg2rad(10.5) #np.mean(wall_yaw)
     wall_fun = lambda x: np.tan(wall_angle) * x + (wall_pos[0] - np.tan(wall_angle) * wall_pos[1])
 
     # Only add the first wall
@@ -326,7 +326,7 @@ for idx, path in enumerate(paths[:6]):
     ###########################################################
     ############# Plot the current data #######################
     ###########################################################
-    axs.plot(ee[:, 0], ee[:, 1], color="black", alpha=0.2, zorder=10, lw=0.7*lw)
+    #axs.plot(ee[:, 0], ee[:, 1], color="black", alpha=0.2, zorder=10, lw=0.7*lw)
 
     ###########################################################
     axs_t[0].plot(t_ee, ee[:, 0], color="grey")

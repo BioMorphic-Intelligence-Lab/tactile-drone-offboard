@@ -256,7 +256,7 @@ for idx, path in enumerate(paths[:6]):
     #############################################################
     ################ Wall Patch Definition ######################
     #############################################################
-    wall_pos =  np.mean(wall, axis=0) # [1.66, 0]  [1.78, 0]
+    wall_pos =  np.mean(wall, axis=0) + 0.04# [1.66, 0]  [1.78, 0]
     y_diff = wall_pos[0] - 1.5
     wall_pos[0] -= y_diff
     q0_wall = wall_q[:,0]
@@ -268,12 +268,11 @@ for idx, path in enumerate(paths[:6]):
             q0_wall**2 + q1_wall**2 - q2_wall**2 - q3_wall**2
         )
 
-    wall_angle = np.mean(wall_yaw)
+    wall_angle = np.deg2rad(-11.0) #np.mean(wall_yaw)
     wall_fun = lambda x: np.tan(wall_angle) * x + (wall_pos[0] - np.tan(wall_angle) * wall_pos[1])
 
     # Only add the first wall
     if idx == 0: 
-        #wall_angle = -0.6 * np.pi/180 # - 20.1 -26.8
         
         wall_side=np.array([-1.9, 0.0])
         wall_up = np.array([0, 0.25])
@@ -324,7 +323,7 @@ for idx, path in enumerate(paths[:6]):
     ###########################################################
     ############# Plot the current data #######################
     ###########################################################
-    axs.plot(ee[:, 0], ee[:, 1], color="black", alpha=0.2, zorder=10, lw=0.7*lw)
+    #axs.plot(ee[:, 0], ee[:, 1], color="black", alpha=0.2, zorder=10, lw=0.7*lw)
 
     ###########################################################
     axs_t[0].plot(t_ee, ee[:, 0], color="grey")
@@ -358,8 +357,8 @@ axs_t[0].plot(t_mean, mean[:, 0], color="orange", label=r"$\mu_x$")
 axs_t[1].plot(t_mean, mean[:, 1], color="orange", label=r"$\mu_y$")
 axs_t[2].plot(t_mean, mean[:, 2], color="orange", label=r"$\mu_z$")
 draw_error_band(axs_t[0], t_mean, mean[:,0], std[:,0], facecolor="orange", alpha=.3 ,label=r"$\sigma_x$")
-draw_error_band(axs_t[1], t_mean, mean[:,1], std[:,1], facecolor="orange", alpha=.3,label=r"$\sigma_x$")
-draw_error_band(axs_t[2], t_mean, mean[:,2], std[:,2], facecolor="orange", alpha=.3,label=r"$\sigma_x$")
+draw_error_band(axs_t[1], t_mean, mean[:,1], std[:,1], facecolor="orange", alpha=.3,label=r"$\sigma_y$")
+draw_error_band(axs_t[2], t_mean, mean[:,2], std[:,2], facecolor="orange", alpha=.3,label=r"$\sigma_z$")
 
 axs.plot(mean[:, 0], mean[:,1], color=colors["ee"], label=r"$\mu_{EE}$", lw=lw, zorder=21)
 

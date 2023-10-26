@@ -244,7 +244,7 @@ for i in range(ee_ref_idx[0], ee_ref_idx[1]):
 #############################################################
 ################ Wall Patch Definition ######################
 #############################################################
-wall_pos = np.mean(wall, axis=0)
+wall_pos = np.mean(wall, axis=0) + 0.04
 q0_wall = wall_q[:,0]
 q1_wall = wall_q[:,1]
 q2_wall = wall_q[:,2]
@@ -254,7 +254,7 @@ wall_yaw = -np.arctan2(
         q0_wall**2 + q1_wall**2 - q2_wall**2 - q3_wall**2
     )
 
-wall_angle = np.mean(wall_yaw)
+wall_angle = np.deg2rad(-11.0)
 wall_fun = lambda x: np.tan(wall_angle) * x + (wall_pos[0] - np.tan(wall_angle) * wall_pos[1])
 
 
@@ -362,7 +362,7 @@ AngleAnnotation(xy=angle_points[0,:],
 text_position = np.mean(angle_points[1:,:],axis=0) + np.array([-.05, 0.025])
 axs2.annotate(rf"$\psi_{wall_str} = {180/np.pi * wall_angle:.1f}^\circ$", text_position, fontsize=0.8*text_size)
 
-axs2.set_title("(b) Angled Away", loc='left', pad=25, fontsize=1.2*text_size)
+#axs2.set_title("(b) Angled Away", loc='left', pad=25, fontsize=1.2*text_size)
 
 ####################################################
 ############## EE Position and Reference ###########

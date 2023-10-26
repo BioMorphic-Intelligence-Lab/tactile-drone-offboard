@@ -342,12 +342,12 @@ for idx, path in enumerate(paths[:6]):
     ###########################################################
     
     d2_idx = np.argwhere(ee[:, 1] > 1.4)[0][0]
-    ax2.plot(ee[d2_idx:joint_state_idx[1], 0],
-             ee[d2_idx:joint_state_idx[1], 2],
-                color="black", alpha=0.3, lw=0.7*lw)
-    ax3.plot(t_ee[joint_state_idx[0]:joint_state_idx[1]],
-                ee[joint_state_idx[0]:joint_state_idx[1], 2],
-                color="black", alpha=0.3, lw=0.7*lw)
+    #ax2.plot(ee[d2_idx:joint_state_idx[1], 0],
+    #         ee[d2_idx:joint_state_idx[1], 2],
+    #            color="black", alpha=0.3, lw=0.7*lw)
+    #ax3.plot(t_ee[joint_state_idx[0]:joint_state_idx[1]],
+    #            ee[joint_state_idx[0]:joint_state_idx[1], 2],
+    #            color="black", alpha=0.3, lw=0.7*lw)
     
 
     axs.plot3D(ee[joint_state_idx[0]:joint_state_idx[1], 0],

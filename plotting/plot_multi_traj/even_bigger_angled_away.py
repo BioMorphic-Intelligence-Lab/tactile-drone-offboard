@@ -251,7 +251,7 @@ for idx, path in enumerate(paths[:6]):
     #############################################################
     ################ Wall Patch Definition ######################
     #############################################################
-    wall_pos =  [1.78, 0]
+    wall_pos =  [1.8, 0]
     y_diff = wall_pos[0] - 1.5
     wall_pos[0] -= y_diff
     q0_wall = wall_q[:,0]
@@ -268,7 +268,7 @@ for idx, path in enumerate(paths[:6]):
 
     # Only add the first wall
     if idx == 0: 
-        wall_angle = -26.8 * np.pi/180 
+        wall_angle = -27.0 * np.pi/180 
         
         wall_side=np.array([-1.9, 0.0])
         wall_up = np.array([0, 0.25])
