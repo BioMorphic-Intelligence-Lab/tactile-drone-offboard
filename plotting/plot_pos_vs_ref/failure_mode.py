@@ -244,7 +244,7 @@ for i in range(ee_ref_idx[0], ee_ref_idx[1]):
 #############################################################
 ################ Wall Patch Definition ######################
 #############################################################
-wall_pos = np.mean(wall, axis=0)
+wall_pos =  np.mean(wall, axis=0) + np.array([0.05, 0.0, 0])
 q0_wall = wall_q[:,0]
 q1_wall = wall_q[:,1]
 q2_wall = wall_q[:,2]
@@ -254,11 +254,11 @@ wall_yaw = -np.arctan2(
         q0_wall**2 + q1_wall**2 - q2_wall**2 - q3_wall**2
     )
 
-wall_angle = np.mean(wall_yaw)
+wall_angle = np.deg2rad(10.5) #np.mean(wall_yaw)
 wall_fun = lambda x: np.tan(wall_angle) * x + (wall_pos[0] - np.tan(wall_angle) * wall_pos[1])
 
 
-wall_side=np.array([-1.9, 0.0])
+wall_side=np.array([-2.2, 0.0])
 wall_up = np.array([0, 0.25])
 rot = np.array([[np.cos(wall_angle), -np.sin(wall_angle)],
                 [np.sin(wall_angle),  np.cos(wall_angle)]])
@@ -339,7 +339,8 @@ axs2.spines['right'].set_visible(False)
 axs2.set_xlabel("x [m]", fontsize=text_size)
 axs2.set_ylabel("y [m]", fontsize=text_size)
 axs2.set_xlim([-2.2, 0.3])
-axs2.set_ylim([-0.75, 1.6])
+axs2.set_ylim([-0.75, 1.7])
+axs2.tick_params(axis='both', which='major', labelsize=0.8*text_size)
 
 handles, labels = fig2.gca().get_legend_handles_labels()
 by_label = dict(zip(labels, handles))
